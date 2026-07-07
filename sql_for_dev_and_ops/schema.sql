@@ -1,21 +1,21 @@
 -- ============================================================================
 -- schema.sql
--- Database schema for the "superheroes" educational SQLite database.
+-- Схема учебной базы данных «superheroes» на SQLite.
 --
--- This file creates every table and index used in the SQL basics webinar.
--- It is intentionally simple and heavily commented so beginners can read it.
+-- Этот файл создаёт все таблицы и индексы для вебинара по основам SQL.
+-- Намеренно простой и подробно прокомментированный, чтобы начинающие могли разобраться.
 --
--- You can apply it by hand with:
+-- Применить вручную:
 --     sqlite3 superheroes.sqlite ".read schema.sql"
--- but normally build_db.py runs it for you.
+-- Обычно это делает build_db.py автоматически.
 -- ============================================================================
 
--- Foreign keys are OFF by default in SQLite and must be enabled per connection.
+-- Внешние ключи в SQLite по умолчанию выключены, их нужно включать для каждого соединения.
 PRAGMA foreign_keys = ON;
 
 -- ----------------------------------------------------------------------------
--- 1. publishers
---    The comic book companies (Marvel, DC, Dark Horse, Image).
+-- 1. publishers (издатели)
+--    Компании-издатели комиксов (Marvel, DC, Dark Horse, Image).
 -- ----------------------------------------------------------------------------
 CREATE TABLE publishers (
     id           INTEGER PRIMARY KEY,
@@ -26,9 +26,9 @@ CREATE TABLE publishers (
 );
 
 -- ----------------------------------------------------------------------------
--- 2. teams
---    Super teams (Avengers, X-Men, Justice League, ...).
---    Each team belongs to exactly one publisher.
+-- 2. teams (команды)
+--    Супергеройские команды (Avengers, X-Men, Justice League, ...).
+--    Каждая команда принадлежит ровно одному издателю.
 -- ----------------------------------------------------------------------------
 CREATE TABLE teams (
     id           INTEGER PRIMARY KEY,
@@ -42,13 +42,13 @@ CREATE TABLE teams (
 );
 
 -- ----------------------------------------------------------------------------
--- 3. heroes
---    The main table. One row per character.
+-- 3. heroes (герои)
+--    Главная таблица. Одна строка — один персонаж.
 --
---    CHECK constraints keep the data clean and are great teaching material:
---      * alignment must be one of four known values
---      * is_active must be 0 or 1 (SQLite has no real boolean type)
---      * power_level must be NULL or an integer from 1 to 100
+--    CHECK-ограничения помогают держать данные чистыми — хороший учебный материал:
+--      * alignment должен быть одним из четырёх значений
+--      * is_active может быть только 0 или 1 (в SQLite нет настоящего типа boolean)
+--      * power_level — NULL или целое число от 1 до 100
 -- ----------------------------------------------------------------------------
 CREATE TABLE heroes (
     id                    INTEGER PRIMARY KEY,
@@ -71,8 +71,8 @@ CREATE TABLE heroes (
 );
 
 -- ----------------------------------------------------------------------------
--- 4. powers
---    A catalog of abilities. Each power has a category (physical, mental, ...).
+-- 4. powers (способности)
+--    Каталог способностей. У каждой способности есть категория (physical, mental, ...).
 -- ----------------------------------------------------------------------------
 CREATE TABLE powers (
     id       INTEGER PRIMARY KEY,
@@ -81,11 +81,10 @@ CREATE TABLE powers (
 );
 
 -- ----------------------------------------------------------------------------
--- 5. hero_powers
---    Many-to-many link table between heroes and powers.
---    A hero can have many powers; a power can belong to many heroes.
---    ON DELETE CASCADE cleans up links automatically when a hero or power
---    is removed.
+-- 5. hero_powers (способности героев)
+--    Таблица-связка многие-ко-многим между героями и способностями.
+--    У героя может быть много способностей; одна способность может быть у многих героев.
+--    ON DELETE CASCADE автоматически удаляет связи, когда удаляется герой или способность.
 -- ----------------------------------------------------------------------------
 CREATE TABLE hero_powers (
     hero_id  INTEGER NOT NULL,
@@ -96,10 +95,10 @@ CREATE TABLE hero_powers (
 );
 
 -- ----------------------------------------------------------------------------
--- 6. sources
---    Provenance / metadata: where each row of data came from.
---    entity_type is the table name ('publisher', 'team', 'hero'),
---    entity_id is the id inside that table.
+-- 6. sources (источники)
+--    Происхождение данных: откуда взята каждая строка.
+--    entity_type — имя таблицы ('publisher', 'team', 'hero'),
+--    entity_id — id записи в этой таблице.
 -- ----------------------------------------------------------------------------
 CREATE TABLE sources (
     id           INTEGER PRIMARY KEY,
@@ -111,9 +110,9 @@ CREATE TABLE sources (
 );
 
 -- ----------------------------------------------------------------------------
--- Indexes
---    Indexes make WHERE / JOIN / ORDER BY on these columns faster.
---    They are a good talking point once students understand SELECT.
+-- Индексы
+--    Индексы ускоряют WHERE / JOIN / ORDER BY по этим колонкам.
+--    Хорошая тема для обсуждения, когда студенты уже понимают SELECT.
 -- ----------------------------------------------------------------------------
 CREATE INDEX idx_heroes_alias       ON heroes(alias);
 CREATE INDEX idx_heroes_publisher   ON heroes(publisher_id);

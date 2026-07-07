@@ -1,23 +1,23 @@
 -- ============================================================================
 -- seed_manual_fallback.sql
--- Offline fallback data for the superheroes database.
+-- Офлайн-набор данных для базы супергероев.
 --
--- build_db.py runs this ONLY when it cannot fetch live data from the internet.
--- It contains commonly-known factual information about well-known characters
--- (names, publisher, team, first appearance year, city). It deliberately
--- contains NO copied descriptions, biographies, or plot summaries.
+-- build_db.py запускает этот файл ТОЛЬКО если не удалось получить данные из интернета.
+-- Содержит общеизвестные факты об известных персонажах
+-- (имена, издатель, команда, год первого появления, город). Никаких скопированных
+-- описаний, биографий или сюжетов здесь нет.
 --
--- Fields that are unknown are stored as NULL.
--- The power_level column is an ARTIFICIAL teaching value (1-100), not canon.
--- The is_active column is a SIMPLIFIED teaching flag, not a canonical status.
--- wikidata_qid is left NULL here because these rows were entered by hand and
--- their QIDs were not individually verified.
+-- Неизвестные поля хранятся как NULL.
+-- Колонка power_level — ИСКУССТВЕННОЕ учебное значение (1–100), не каноничное.
+-- Колонка is_active — УПРОЩЁННЫЙ учебный флаг, не каноничный статус.
+-- wikidata_qid оставлен NULL, потому что строки заполнены вручную
+-- и их QID по отдельности не проверялись.
 -- ============================================================================
 
 PRAGMA foreign_keys = ON;
 
 -- --------------------------------------------------------------------------
--- Publishers
+-- Издатели
 -- --------------------------------------------------------------------------
 INSERT INTO publishers (id, name, founded_year, country, source_url) VALUES
     (1, 'Marvel Comics',     1939, 'United States', 'https://www.wikidata.org/wiki/Q173496'),
@@ -26,7 +26,7 @@ INSERT INTO publishers (id, name, founded_year, country, source_url) VALUES
     (4, 'Image Comics',      1992, 'United States', 'https://www.wikidata.org/wiki/Q913301');
 
 -- --------------------------------------------------------------------------
--- Teams
+-- Команды
 -- --------------------------------------------------------------------------
 INSERT INTO teams (id, name, publisher_id, base_city, founded_year, source_url) VALUES
     (1, 'Avengers',                1, 'New York City', 1963, NULL),
@@ -39,7 +39,7 @@ INSERT INTO teams (id, name, publisher_id, base_city, founded_year, source_url) 
     (8, 'B.P.R.D.',                3, 'Fairfield',     NULL, NULL);
 
 -- --------------------------------------------------------------------------
--- Powers catalog
+-- Каталог способностей
 -- --------------------------------------------------------------------------
 INSERT INTO powers (id, name, category) VALUES
     (1,  'Superhuman Strength',  'physical'),
@@ -80,8 +80,8 @@ INSERT INTO powers (id, name, category) VALUES
     (36, 'Unknown',              'unknown');
 
 -- --------------------------------------------------------------------------
--- Heroes
--- columns: id, alias, real_name, publisher_id, team_id, alignment,
+-- Герои
+-- колонки: id, alias, real_name, publisher_id, team_id, alignment,
 --          first_appearance_year, city, power_level, is_active,
 --          wikidata_qid, source_url
 -- --------------------------------------------------------------------------
@@ -161,7 +161,7 @@ VALUES
     (64, 'The Maxx',      NULL,               4, NULL, 'hero',     1993, NULL,            65, 0, NULL, NULL);
 
 -- --------------------------------------------------------------------------
--- Hero powers (many-to-many links)
+-- Способности героев (связь многие-ко-многим)
 -- --------------------------------------------------------------------------
 INSERT INTO hero_powers (hero_id, power_id) VALUES
     -- Marvel

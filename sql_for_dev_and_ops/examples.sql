@@ -1,16 +1,19 @@
 -- ============================================================================
 -- examples.sql
--- Teaching queries for the SQL basics webinar.
+-- Учебные запросы для вебинара по основам SQL.
 --
--- Run the whole file:
+-- Запустить весь файл:
 --     sqlite3 superheroes.sqlite ".read examples.sql"
 --
--- ...but it is much better to open the database and run these ONE AT A TIME so
--- students can see each result:
+-- ...но лучше открыть базу и выполнять запросы ПО ОДНОМУ, чтобы
+-- можно было увидеть каждый результат:
 --     sqlite3 superheroes.sqlite
 --     sqlite> .headers on
 --     sqlite> .mode column
 --     sqlite> SELECT * FROM heroes LIMIT 5;
+--
+-- перед тем как работать с этой базой можно на всякий случай создать резервную копию:
+--     cp superheroes.sqlite superheroes.sqlite.bak
 -- ============================================================================
 
 .headers on
@@ -18,55 +21,55 @@
 
 
 -- ############################################################################
--- 1. BASIC SELECT
+-- 1. ПРОСТОЙ SELECT
 -- ############################################################################
 
--- 1.1  Select all heroes (every column, every row).
+-- 1.1  Выбрать всех героев (все колонки, все строки).
 SELECT * FROM heroes;
 
--- 1.2  Select only two columns: the alias and the real name.
+-- 1.2  Выбрать только две колонки: псевдоним и настоящее имя.
 SELECT alias, real_name FROM heroes;
 
--- 1.3  Select only heroes that are currently active.
+-- 1.3  Выбрать только активных героев.
 SELECT alias, is_active FROM heroes
 WHERE is_active = 1;
 
 
 -- ############################################################################
--- 2. WHERE (filtering rows)
+-- 2. WHERE (фильтрация строк)
 -- ############################################################################
 
--- 2.1  Heroes published by Marvel (publisher_id 1 is Marvel in the seed data;
---      the JOIN section below shows how to filter by name instead of id).
+-- 2.1  Герои Marvel (publisher_id 1 — это Marvel в наших данных;
+--      в разделе JOIN ниже покажем, как фильтровать по названию, а не по id).
 SELECT alias, publisher_id FROM heroes
 WHERE publisher_id = 1;
 
--- 2.2  Only antiheroes.
+-- 2.2  Только антигерои.
 SELECT alias, alignment FROM heroes
 WHERE alignment = 'antihero';
 
--- 2.3  Heroes with a high power level (80 or more).
+-- 2.3  Герои с высоким уровнем силы (80 и выше).
 SELECT alias, power_level FROM heroes
 WHERE power_level >= 80
 ORDER BY power_level DESC;
 
--- 2.4  Heroes whose alias starts with 'Spider' or 'Bat'.
+-- 2.4  Герои, чей псевдоним начинается на 'Spider' или 'Bat'.
 SELECT alias FROM heroes
 WHERE alias LIKE 'Spider%'
    OR alias LIKE 'Bat%';
 
 
 -- ############################################################################
--- 3. ORDER BY and LIMIT (sorting and cutting the result)
+-- 3. ORDER BY и LIMIT (сортировка и ограничение результата)
 -- ############################################################################
 
--- 3.1  Top 10 strongest heroes by power level.
+-- 3.1  Топ-10 самых сильных героев по уровню силы.
 SELECT alias, power_level FROM heroes
 WHERE power_level IS NOT NULL
 ORDER BY power_level DESC
 LIMIT 10;
 
--- 3.2  The 10 oldest characters by first appearance year.
+-- 3.2  10 самых ранних персонажей по году первого появления.
 SELECT alias, first_appearance_year FROM heroes
 WHERE first_appearance_year IS NOT NULL
 ORDER BY first_appearance_year ASC
@@ -74,37 +77,37 @@ LIMIT 10;
 
 
 -- ############################################################################
--- 4. JOIN (combining tables)
+-- 4. JOIN (объединение таблиц)
 -- ############################################################################
 
--- 4.1  INNER JOIN: each hero together with its publisher name.
+-- 4.1  INNER JOIN: каждый герой вместе с названием издателя.
 SELECT h.alias, p.name AS publisher
 FROM heroes AS h
 INNER JOIN publishers AS p ON p.id = h.publisher_id
 ORDER BY p.name, h.alias;
 
--- 4.2  INNER JOIN: each hero together with its team name.
---      INNER JOIN hides heroes that have no team (team_id IS NULL).
+-- 4.2  INNER JOIN: каждый герой вместе с названием команды.
+--      INNER JOIN скрывает героев без команды (team_id IS NULL).
 SELECT h.alias, t.name AS team
 FROM heroes AS h
 INNER JOIN teams AS t ON t.id = h.team_id
 ORDER BY t.name, h.alias;
 
--- 4.3  LEFT JOIN: every hero, even the ones WITHOUT a team.
---      Heroes with no team show NULL in the team column.
+-- 4.3  LEFT JOIN: все герои, даже те, у кого НЕТ команды.
+--      Герои без команды показывают NULL в колонке team.
 SELECT h.alias, t.name AS team
 FROM heroes AS h
 LEFT JOIN teams AS t ON t.id = h.team_id
 ORDER BY h.alias;
 
--- 4.4  LEFT JOIN + WHERE: only the heroes that have NO team.
+-- 4.4  LEFT JOIN + WHERE: только герои БЕЗ команды.
 SELECT h.alias
 FROM heroes AS h
 LEFT JOIN teams AS t ON t.id = h.team_id
 WHERE t.id IS NULL
 ORDER BY h.alias;
 
--- 4.5  Marvel heroes, filtered by publisher NAME (not id) using a JOIN.
+-- 4.5  Герои Marvel, отфильтрованные по НАЗВАНИЮ издателя (не по id) через JOIN.
 SELECT h.alias, p.name AS publisher
 FROM heroes AS h
 INNER JOIN publishers AS p ON p.id = h.publisher_id
@@ -113,10 +116,10 @@ ORDER BY h.alias;
 
 
 -- ############################################################################
--- 5. MANY-TO-MANY (heroes <-> powers via hero_powers)
+-- 5. МНОГИЕ-КО-МНОГИМ (герои <-> способности через hero_powers)
 -- ############################################################################
 
--- 5.1  All powers of one selected hero (Spider-Man).
+-- 5.1  Все способности одного героя (Spider-Man).
 SELECT h.alias, pw.name AS power, pw.category
 FROM heroes AS h
 INNER JOIN hero_powers AS hp ON hp.hero_id = h.id
@@ -124,7 +127,7 @@ INNER JOIN powers      AS pw ON pw.id = hp.power_id
 WHERE h.alias = 'Spider-Man'
 ORDER BY pw.name;
 
--- 5.2  All heroes that have one selected power (Flight).
+-- 5.2  Все герои с одной выбранной способностью (Flight).
 SELECT pw.name AS power, h.alias
 FROM powers AS pw
 INNER JOIN hero_powers AS hp ON hp.power_id = pw.id
@@ -134,31 +137,32 @@ ORDER BY h.alias;
 
 
 -- ############################################################################
--- 6. GROUP BY (aggregation) with COUNT and AVG
+-- 6. GROUP BY (агрегация) с COUNT и AVG
 -- ############################################################################
 
--- 6.1  Number of heroes per publisher.
-SELECT p.name AS publisher, COUNT(*) AS hero_count
-FROM heroes AS h
-INNER JOIN publishers AS p ON p.id = h.publisher_id
-GROUP BY p.name
+-- 6.1  Количество героев по издателям.
+--      LEFT JOIN оставит издателя в результате, даже если у него нет героев.
+SELECT p.name AS publisher, COUNT(h.id) AS hero_count
+FROM publishers AS p
+LEFT JOIN heroes AS h ON h.publisher_id = p.id
+GROUP BY p.id, p.name
 ORDER BY hero_count DESC;
 
--- 6.2  Average power level per publisher (rounded to 1 decimal).
+-- 6.2  Средний уровень силы по издателям (округлён до 1 знака).
 SELECT p.name AS publisher, ROUND(AVG(h.power_level), 1) AS avg_power
 FROM heroes AS h
 INNER JOIN publishers AS p ON p.id = h.publisher_id
 GROUP BY p.name
 ORDER BY avg_power DESC;
 
--- 6.3  Number of heroes per team.
+-- 6.3  Количество героев по командам.
 SELECT t.name AS team, COUNT(*) AS hero_count
 FROM heroes AS h
 INNER JOIN teams AS t ON t.id = h.team_id
 GROUP BY t.name
 ORDER BY hero_count DESC;
 
--- 6.4  The most common powers (how many heroes have each power).
+-- 6.4  Самые распространённые способности (сколько героев владеют каждой).
 SELECT pw.name AS power, COUNT(*) AS hero_count
 FROM powers AS pw
 INNER JOIN hero_powers AS hp ON hp.power_id = pw.id
@@ -168,38 +172,73 @@ LIMIT 10;
 
 
 -- ############################################################################
--- 7. INSERT (adding rows)
+-- 7. INSERT (добавление строк)
 -- ############################################################################
 
--- 7.1  Add a brand new (test) hero. publisher_id 1 = Marvel in the seed data.
-INSERT INTO heroes (alias, real_name, publisher_id, alignment, is_active)
-VALUES ('Test Hero', 'Q. A. Tester', 1, 'unknown', 1);
-
-
--- ############################################################################
--- 8. UPDATE (changing existing rows)
--- ############################################################################
--- Always UPDATE with a WHERE clause, or you will change EVERY row!
-
--- 8.1  Retire one hero: set is_active = 0 for the hero with id 1.
-UPDATE heroes
-SET is_active = 0
-WHERE id = 1;
-
--- 8.2  Update the city of one hero (id 2).
-UPDATE heroes
-SET city = 'Los Angeles'
-WHERE id = 2;
-
-
--- ############################################################################
--- 9. DELETE (removing rows)
--- ############################################################################
-
--- 9.1  Delete the test hero we added above (by alias).
+-- 7.0  На случай повторного запуска удаляем старого тестового героя.
 DELETE FROM heroes
 WHERE alias = 'Test Hero';
 
--- 9.2  DANGER: a DELETE without WHERE removes EVERY row in the table.
---      The line below is commented out on purpose. Never run it on real data!
+-- 7.1  Добавляем нового тестового героя. publisher_id 1 = Marvel в наших данных.
+INSERT INTO heroes (alias, real_name, publisher_id, alignment, is_active)
+VALUES ('Test Hero', 'Q. A. Tester', 1, 'unknown', 1);
+
+-- 7.2  Проверяем, что герой добавился.
+SELECT id, alias, real_name, publisher_id, alignment, is_active
+FROM heroes
+WHERE alias = 'Test Hero';
+
+
+-- ############################################################################
+-- 8. UPDATE (изменение существующих строк)
+-- ############################################################################
+-- Всегда используй WHERE в UPDATE, иначе изменишь ВСЕ строки!
+
+-- 8.1  Отправляем тестового героя на пенсию: is_active = 0.
+UPDATE heroes
+SET is_active = 0
+WHERE alias = 'Test Hero';
+
+-- 8.2  Меняем город тестового героя.
+UPDATE heroes
+SET city = 'Los Angeles'
+WHERE alias = 'Test Hero';
+
+-- 8.3  Проверяем изменения.
+SELECT alias, city, is_active
+FROM heroes
+WHERE alias = 'Test Hero';
+
+-- 8.4  ОПАСНО: UPDATE без WHERE изменит ВСЕ строки в таблице.
+--      Строка ниже закомментирована специально.
+-- UPDATE heroes SET power_level = 100;
+
+
+-- ############################################################################
+-- 9. DELETE (удаление строк)
+-- ############################################################################
+
+-- 9.1  Удаляем тестового героя, которого добавили выше.
+DELETE FROM heroes
+WHERE alias = 'Test Hero';
+
+-- 9.2  Проверяем, что тестовый герой удалён.
+SELECT alias
+FROM heroes
+WHERE alias = 'Test Hero';
+
+-- 9.3  ОПАСНО: DELETE без WHERE удалит ВСЕ строки в таблице.
+--      Строка ниже закомментирована специально. Никогда не запускай на реальных данных!
 -- DELETE FROM heroes;
+
+-- ############################################################################
+-- 10. FOREIGN KEY: пример ошибки
+-- ############################################################################
+
+-- Если включён PRAGMA foreign_keys = ON, такой запрос упадёт с ошибкой:
+-- FOREIGN KEY constraint failed
+--
+-- Потому что publisher_id = 999 не существует в таблице publishers.
+--
+-- INSERT INTO heroes (alias, publisher_id, alignment, is_active)
+-- VALUES ('Broken Hero', 999, 'unknown', 1);

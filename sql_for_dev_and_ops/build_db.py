@@ -1,36 +1,35 @@
 #!/usr/bin/env python3
-"""build_db.py - build the educational ``superheroes.sqlite`` database.
+"""build_db.py — создаёт учебную базу данных ``superheroes.sqlite``.
 
-What this script does, in order:
+Что делает скрипт, по шагам:
 
-1. Create a fresh ``superheroes.sqlite`` file (any old one is deleted).
-2. Turn on foreign keys and create every table + index from ``schema.sql``.
-3. Insert a curated CORE of well-known characters (commonly-known facts only:
-   names, publisher, team, first appearance year, city, powers). This guarantees
-   that recognisable characters are always present for the webinar.
-4. Fetch ADDITIONAL real characters from open, machine-readable sources to add
-   volume:
-     * FIRST choice: Wikidata (SPARQL query service).
-     * If Wikidata is unavailable, DBpedia (also open data from Wikipedia).
-   Comic series/titles are filtered out; powers and first-appearance years are
-   mined from the characters' own Wikipedia categories.
-5. If BOTH internet sources fail (or ``requests`` is not installed), load the
-   offline dataset from ``seed_manual_fallback.sql`` and print a warning.
-6. Print row counts for every table and run validation queries, including
-   ``PRAGMA foreign_key_check``.
+1. Создаёт новый файл ``superheroes.sqlite`` (старый, если есть, удаляется).
+2. Включает внешние ключи и создаёт все таблицы и индексы из ``schema.sql``.
+3. Вставляет базовый набор известных персонажей (только общеизвестные факты:
+   имена, издатель, команда, год первого появления, город, способности). Это гарантирует,
+   что узнаваемые персонажи всегда будут присутствовать в базе для вебинара.
+4. Загружает ДОПОЛНИТЕЛЬНЫХ реальных персонажей из открытых источников для увеличения объёма:
+     * Приоритет: Wikidata (SPARQL-сервис запросов).
+     * Если Wikidata недоступна — DBpedia (тоже открытые данные из Wikipedia).
+   Серии комиксов отфильтровываются; способности и год первого появления извлекаются
+   из Wikipedia-категорий самого персонажа.
+5. Если ОБА источника недоступны (или не установлен ``requests``), загружает
+   офлайн-набор из ``seed_manual_fallback.sql`` и выводит предупреждение.
+6. Выводит количество строк в каждой таблице и выполняет проверочные запросы,
+   включая ``PRAGMA foreign_key_check``.
 
-Only two dependencies are used: ``requests`` (for the HTTP calls) and the
-standard-library ``sqlite3`` module. ``requests`` is optional - without it the
-script builds from the offline fallback.
+Используются только две зависимости: ``requests`` (для HTTP-запросов) и
+Cтандартный модуль ``sqlite3``. ``requests`` необязателен: без него
+Cкрипт собирает базу из офлайн-набора.
 
-DATA HONESTY
-------------
-* Names, publisher, team, first appearance year and city are factual.
-* ``power_level`` is an ARTIFICIAL teaching value (1-100), derived deterministically
-  from popularity + number of powers. It is NOT canon.
-* ``is_active`` is a simplified teaching flag.
-* Unknown fields are stored as NULL - nothing is invented.
-* The curated core uses only short, commonly-known facts (no copied text).
+О ДАННЫХ
+--------
+* Имена, издатель, команда, год первого появления и город — фактические данные.
+* ``power_level`` — ИСКУССТВЕННОЕ учебное значение (1–100), вычисляемое
+  детерминированно на основе популярности + количества способностей. Не каноничное.
+* ``is_active`` — упрощённый учебный флаг, не каноничный статус.
+* Неизвестные поля хранятся как NULL — ничего не придумывается.
+* Базовый набор содержит только краткие общеизвестные факты (без скопированных текстов).
 """
 
 from __future__ import annotations
@@ -44,27 +43,27 @@ from pathlib import Path
 
 try:
     import requests
-except ImportError:  # requests is optional; without it we use the fallback seed.
+except ImportError:  # requests необязателен; без него используем офлайн-набор.
     requests = None  # type: ignore
 
 # ---------------------------------------------------------------------------
-# Paths and tunables
+# Пути к файлам и настройки
 # ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "superheroes.sqlite"
 SCHEMA_PATH = BASE_DIR / "schema.sql"
 SEED_PATH = BASE_DIR / "seed_manual_fallback.sql"
 
-MAX_HEROES = 1000        # hard cap on total heroes
-PREFERRED_HEROES = 500   # nice-to-have target
-MIN_HEROES = 300         # minimum "good" result
-LIVE_CAP_PER_PUBLISHER = 160  # keeps the publisher mix balanced for GROUP BY demos
+MAX_HEROES = 1000        # максимальное количество героев
+PREFERRED_HEROES = 500   # желаемый результат
+MIN_HEROES = 300         # минимально приемлемый результат
+LIVE_CAP_PER_PUBLISHER = 160  # ограничение по издателю для баланса при GROUP BY
 
 WDQS_ENDPOINT = "https://query.wikidata.org/sparql"
 DBPEDIA_ENDPOINT = "https://dbpedia.org/sparql"
 USER_AGENT = "SuperheroesWebinarDB/1.0 (educational SQL basics demo; contact: instructor@example.com)"
 
-# Canonical publishers and their factual details.
+# Издатели и их фактические данные.
 PUBLISHER_INFO = {
     "Marvel Comics":     (1939, "United States", "https://www.wikidata.org/wiki/Q173496"),
     "DC Comics":         (1934, "United States", "https://www.wikidata.org/wiki/Q2924461"),
@@ -72,7 +71,7 @@ PUBLISHER_INFO = {
     "Image Comics":      (1992, "United States", "https://www.wikidata.org/wiki/Q913301"),
 }
 
-# Wikidata publisher QIDs -> canonical names.
+# QID издателей в Wikidata -> канонические названия.
 PUBLISHER_QID_TO_NAME = {
     "Q173496": "Marvel Comics", "Q931597": "Marvel Comics",
     "Q2924461": "DC Comics", "Q1152150": "DC Comics",
@@ -80,9 +79,9 @@ PUBLISHER_QID_TO_NAME = {
     "Q913301": "Image Comics",
 }
 
-# DBpedia entry points per publisher: a set of Wikipedia character categories to
-# pull members from, plus the publisher resource (dbo:publisher). Using several
-# entry points per publisher gives us plenty of real characters to choose from.
+# Точки входа DBpedia по издателям: наборы категорий Wikipedia с персонажами
+# и ресурс издателя (dbo:publisher). Несколько точек входа дают достаточно
+# реальных персонажей на выбор.
 DBPEDIA_ENTRY = {
     "Marvel Comics": {
         "resource": "Marvel_Comics",
@@ -115,7 +114,7 @@ DBPEDIA_ENTRY = {
     },
 }
 
-# Known major teams -> the publisher they belong to (keeps the teams table clean).
+# Известные команды -> их издатель (чтобы таблица teams оставалась аккуратной).
 KNOWN_TEAMS = {
     "Avengers": "Marvel Comics", "X-Men": "Marvel Comics", "X-Force": "Marvel Comics",
     "X-Factor": "Marvel Comics", "Fantastic Four": "Marvel Comics",
@@ -129,7 +128,7 @@ KNOWN_TEAMS = {
     "Youngblood": "Image Comics", "Cyberforce": "Image Comics",
 }
 
-# Optional base city / founded year for the known teams.
+# Город базирования и год основания известных команд (если известны).
 TEAM_INFO = {
     "Avengers": ("New York City", 1963),
     "X-Men": ("Salem Center", 1963),
@@ -141,7 +140,7 @@ TEAM_INFO = {
     "B.P.R.D.": ("Fairfield", None),
 }
 
-# The catalog of powers and their category (matches seed_manual_fallback.sql).
+# Каталог способностей и их категорий (совпадает с seed_manual_fallback.sql).
 POWERS_CATALOG = [
     ("Superhuman Strength", "physical"), ("Superhuman Durability", "physical"),
     ("Superhuman Agility", "physical"), ("Enhanced Senses", "physical"),
@@ -162,8 +161,8 @@ POWERS_CATALOG = [
     ("Force Field", "cosmic"), ("Unknown", "unknown"),
 ]
 
-# Wikipedia category substring -> power. Used to mine powers for live characters
-# from their own "characters with X" categories.
+# Подстрока из категории Wikipedia -> способность. Используется для извлечения
+# способностей персонажей из их собственных категорий.
 CATEGORY_POWER_MAP = [
     ("superhuman_strength", "Superhuman Strength"),
     ("superhuman_speed", "Super Speed"),
@@ -199,12 +198,12 @@ CATEGORY_POWER_MAP = [
     ("powered_exoskeleton", "Powered Armor"),
 ]
 
-# These curated core characters are marked inactive (simplified teaching flag).
+# Эти персонажи из базового набора помечены неактивными (упрощённый учебный флаг).
 INACTIVE_ALIASES = {"concrete", "barb wire", "shadowhawk", "the maxx"}
 
 # ---------------------------------------------------------------------------
-# Curated CORE of famous characters (commonly-known facts only).
-# Fields: alias, real_name, publisher, team, alignment, year, city, [powers]
+# Базовый набор известных персонажей (только общеизвестные факты).
+# Поля: псевдоним, настоящее имя, издатель, команда, мировоззрение, год, город, [способности]
 # ---------------------------------------------------------------------------
 FAMOUS = [
     # Marvel Comics
@@ -341,7 +340,7 @@ FAMOUS = [
      ["Superhuman Strength", "Superhuman Durability"]),
 ]
 
-# --- Wikidata SPARQL: one query for all four publishers -------------------
+# --- Wikidata SPARQL: один запрос для всех четырёх издателей ---
 SPARQL_QUERY = """
 SELECT ?c ?cLabel ?pub ?inception ?sitelinks
        (GROUP_CONCAT(DISTINCT ?typeLabel; separator="|") AS ?types)
@@ -368,22 +367,22 @@ ORDER BY DESC(?sitelinks)
 LIMIT 1500
 """
 
-# --- DBpedia SPARQL: one lighter query per entry point ---------------------
-# The DBpedia public endpoint has a server-side time limit. A single big query
-# that UNIONs several large categories can exceed it (HTTP 206 partial). So we
-# query ONE entry point at a time (a category, or the publisher link) and merge
-# the results in Python. Each query is small and reliable.
+# --- DBpedia SPARQL: один лёгкий запрос на каждую точку входа ---
+# У публичного эндпойнта DBpedia есть серверный лимит времени. Один большой запрос
+# с UNION из нескольких крупных категорий может его превысить (HTTP 206 partial). Поэтому
+# запрашиваем ПО ОДНОЙ точке входа (категория или ссылка на издателя)
+# и объединяем результаты в Python. Каждый запрос небольшой и надёжный.
 def build_dbpedia_entry_query(kind: str, value: str) -> str:
-    """Build a query for a single entry point.
+    """Формирует запрос для одной точки входа.
 
-    kind is either 'category' (members of a Wikipedia category) or
-    'publisher' (items linked with dbo:publisher).
+    kind: 'category' (участники категории Wikipedia) или
+    'publisher' (объекты, связанные через dbo:publisher).
 
-    The query is kept deliberately light: it aggregates only the character's
-    own subject categories (used to mine powers, first-appearance year and
-    alignment). We do NOT also aggregate alliances here, because combining two
-    GROUP_CONCATs multiplies the intermediate rows and makes the public DBpedia
-    endpoint time out (HTTP 206). Team links come from the curated core instead.
+    Запрос намеренно простой: агрегирует только собственные категории персонажа
+    (нужны для извлечения способностей, года первого появления и мировоззрения).
+    Альянсы здесь не агрегируются, потому что два GROUP_CONCAT перемножают
+    промежуточные строки и вызывают таймаут DBpedia (HTTP 206). Команды берутся
+    из базового набора.
     """
     if kind == "category":
         selector = f"?c dct:subject dbc:{value} ."
@@ -406,19 +405,19 @@ LIMIT 400
 
 
 # ---------------------------------------------------------------------------
-# Small helpers
+# Вспомогательные функции
 # ---------------------------------------------------------------------------
 def qid_from_uri(uri: str) -> str:
     return uri.rsplit("/", 1)[-1]
 
 
 def clean_alias(name: str) -> str:
-    """Drop a trailing '(disambiguation)' suffix: 'Vision (Marvel Comics)' -> 'Vision'."""
+    """Убирает суффикс уточнения в скобках: 'Vision (Marvel Comics)' -> 'Vision'."""
     return re.sub(r"\s*\([^)]*\)\s*$", "", name).strip()
 
 
 def clean_real_name(value: str | None) -> str | None:
-    """Keep a source-provided real name only if it looks like a plain name."""
+    """Оставляет настоящее имя, только если оно выглядит как обычное имя."""
     if not value:
         return None
     v = value.strip()
@@ -451,7 +450,7 @@ def infer_alignment(text: str) -> str:
 
 
 def mine_powers(subjects_lower: str) -> list[str]:
-    """Read powers from a character's own Wikipedia categories."""
+    """Извлекает способности из Wikipedia-категорий персонажа."""
     found: list[str] = []
     for needle, power in CATEGORY_POWER_MAP:
         if needle in subjects_lower and power not in found:
@@ -460,13 +459,13 @@ def mine_powers(subjects_lower: str) -> list[str]:
 
 
 def looks_like_character(subjects_lower: str, debut: str | None, alter: str | None, name: str) -> bool:
-    """Heuristic to keep real characters and drop series/titles/list pages."""
+    """Эвристика: оставляет настоящих персонажей и отсеивает серии/списки."""
     low = name.lower()
     if low.startswith(("list of", "alternative versions", "alternative version")):
         return False
     if "(disambiguation)" in low:
         return False
-    # An aggregate/list page tends to carry several different introduction years.
+    # Страницы-списки обычно содержат несколько разных годов появления.
     if len(set(re.findall(r"introduced_in_(\d{4})", subjects_lower))) > 1:
         return False
     if debut or alter:
@@ -488,7 +487,7 @@ def match_known_team(candidates: list[str], publisher: str) -> str | None:
 
 
 def derive_power_level(popularity: float, num_powers: int) -> int:
-    """Artificial 1-100 teaching value from popularity (0..1) + number of powers."""
+    """Искусственное учебное значение 1–100 из популярности (0..1) + количества способностей."""
     popularity = max(0.0, min(1.0, popularity))
     score = 15 + popularity * 60 + min(num_powers, 6) / 6 * 25
     return max(1, min(100, round(score)))
@@ -499,7 +498,7 @@ def today_iso() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Database creation
+# Создание базы данных
 # ---------------------------------------------------------------------------
 def create_database() -> sqlite3.Connection:
     if DB_PATH.exists():
@@ -511,7 +510,7 @@ def create_database() -> sqlite3.Connection:
 
 
 # ---------------------------------------------------------------------------
-# Live source 1: Wikidata
+# Источник данных 1: Wikidata
 # ---------------------------------------------------------------------------
 def fetch_wikidata(max_attempts: int = 3) -> list[dict] | None:
     if requests is None:
@@ -519,12 +518,12 @@ def fetch_wikidata(max_attempts: int = 3) -> list[dict] | None:
     headers = {"User-Agent": USER_AGENT, "Accept": "application/sparql-results+json"}
     params = {"query": SPARQL_QUERY, "format": "json"}
     for attempt in range(1, max_attempts + 1):
-        print(f"  Wikidata attempt {attempt}/{max_attempts} ...")
+        print(f"  Попытка Wikidata {attempt}/{max_attempts} ...")
         last = attempt == max_attempts
         try:
             resp = requests.get(WDQS_ENDPOINT, params=params, headers=headers, timeout=(10, 40))
         except requests.RequestException as exc:
-            print(f"    network error: {exc}")
+            print(f"    ошибка сети: {exc}")
             if not last:
                 time.sleep(8)
             continue
@@ -539,21 +538,21 @@ def fetch_wikidata(max_attempts: int = 3) -> list[dict] | None:
             return rows
         if resp.status_code == 429:
             if last:
-                print("    rate limited (429); giving up on Wikidata.")
+                print("    ограничение запросов (429); отказываемся от Wikidata.")
                 break
             wait = min(max(int(resp.headers.get("Retry-After", "60") or "60"), 30), 75)
-            print(f"    rate limited (429); waiting {wait}s ...")
+            print(f"    ограничение запросов (429); ждём {wait} с ...")
             time.sleep(wait)
             continue
         if resp.status_code in (500, 502, 503, 504):
             if last:
                 break
-            print(f"    server error {resp.status_code}; waiting 12s ...")
+            print(f"    ошибка сервера {resp.status_code}; ждём 12 с ...") 
             time.sleep(12)
             continue
-        print(f"    unexpected status {resp.status_code}; giving up on Wikidata.")
+        print(f"    неожиданный статус {resp.status_code}; отказываемся от Wikidata.")
         return None
-    print("    exhausted all Wikidata attempts.")
+    print("    все попытки Wikidata исчерпаны.")
     return None
 
 
@@ -583,10 +582,10 @@ def parse_wikidata_row(b: dict) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# Live source 2: DBpedia
+# Источник данных 2: DBpedia
 # ---------------------------------------------------------------------------
 def dbpedia_run(query: str, headers: dict, attempts: int = 2) -> list[dict] | None:
-    """Run one DBpedia query, retrying once on a partial/timeout (HTTP 206)."""
+    """Выполняет один запрос к DBpedia, повторяет при частичном результате (HTTP 206)."""
     for attempt in range(1, attempts + 1):
         try:
             resp = requests.get(
@@ -596,7 +595,7 @@ def dbpedia_run(query: str, headers: dict, attempts: int = 2) -> list[dict] | No
                 timeout=(10, 60),
             )
         except requests.RequestException as exc:
-            print(f"      network error: {exc}")
+            print(f"      ошибка сети: {exc}")
             if attempt < attempts:
                 time.sleep(5)
             continue
@@ -604,13 +603,13 @@ def dbpedia_run(query: str, headers: dict, attempts: int = 2) -> list[dict] | No
             try:
                 return resp.json()["results"]["bindings"]
             except (ValueError, KeyError) as exc:
-                print(f"      could not parse response: {exc}")
+                print(f"      не удалось разобрать ответ: {exc}")
                 return None
         if resp.status_code == 206 and attempt < attempts:
-            print("      partial result (206); retrying once ...")
+            print("      частичный результат (206); повторяем один раз ...")
             time.sleep(5)
             continue
-        print(f"      status {resp.status_code}.")
+        print(f"      статус {resp.status_code}.")
         return None
     return None
 
@@ -621,7 +620,7 @@ def fetch_dbpedia() -> list[dict] | None:
     headers = {"User-Agent": USER_AGENT, "Accept": "application/sparql-results+json"}
     all_rows: list[dict] = []
     for publisher, entry in DBPEDIA_ENTRY.items():
-        print(f"  DBpedia queries for {publisher} ...")
+        print(f"  DBpedia: запросы для {publisher} ...")
         # One entry point at a time, dedup by DBpedia resource URI.
         entry_points = [("category", cat) for cat in entry["categories"]]
         entry_points.append(("publisher", entry["resource"]))
@@ -637,10 +636,10 @@ def fetch_dbpedia() -> list[dict] | None:
                 row = parse_dbpedia_row(b, publisher)
                 if row:
                     by_uri[uri] = row
-            time.sleep(1)  # be polite between requests
+            time.sleep(1)  # пауза между запросами, чтобы не перегружать сервер
         rows = sorted(by_uri.values(), key=lambda r: r["popularity"], reverse=True)
         rows = rows[:LIVE_CAP_PER_PUBLISHER]
-        print(f"    {publisher}: {len(rows)} characters kept.")
+        print(f"    {publisher}: оставлено {len(rows)} персонажей.")
         all_rows.extend(rows)
     return all_rows or None
 
@@ -675,7 +674,7 @@ def parse_dbpedia_row(b: dict, publisher: str) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# Insert helpers
+# Функции вставки данных
 # ---------------------------------------------------------------------------
 def insert_publishers(cur: sqlite3.Cursor) -> dict[str, int]:
     for name, (founded, country, url) in PUBLISHER_INFO.items():
@@ -695,7 +694,7 @@ def insert_powers(cur: sqlite3.Cursor) -> dict[str, int]:
 
 
 def build_online(conn: sqlite3.Connection, live_rows: list[dict]) -> int:
-    """Insert the curated famous core plus deduplicated live rows."""
+    """Вставляет базовый набор известных персонажей и дедуплицированные строки из сети."""
     cur = conn.cursor()
     publisher_ids = insert_publishers(cur)
     power_ids = insert_powers(cur)
@@ -729,7 +728,7 @@ def build_online(conn: sqlite3.Connection, live_rows: list[dict]) -> int:
     seen_qid: set[str] = set()
     sources: list[tuple[int, str, str | None]] = []
 
-    # 1) Curated famous core.
+    # 1) Базовый набор известных персонажей.
     for alias, real_name, publisher, team, alignment, year, city, powers in FAMOUS:
         publisher_id = publisher_ids[publisher]
         is_active = 0 if alias.lower() in INACTIVE_ALIASES else 1
@@ -747,7 +746,7 @@ def build_online(conn: sqlite3.Connection, live_rows: list[dict]) -> int:
         seen_alias_pub.add((alias.lower(), publisher))
         sources.append((hero_id, "curated (commonly-known facts)", None))
 
-    # 2) Live rows for additional volume.
+    # 2) Строки из сети для увеличения объёма.
     for row in live_rows:
         if len(seen_alias_pub) >= MAX_HEROES:
             break
@@ -775,7 +774,7 @@ def build_online(conn: sqlite3.Connection, live_rows: list[dict]) -> int:
         add_powers(hero_id, row["powers"])
         sources.append((hero_id, row["source_name"], row["source_url"]))
 
-    # 3) Provenance records.
+    # 3) Записи о происхождении данных.
     retrieved = today_iso()
     for name, publisher_id in publisher_ids.items():
         cur.execute(
@@ -811,80 +810,80 @@ def build_fallback(conn: sqlite3.Connection) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Reporting and validation
+# Отчёт и валидация
 # ---------------------------------------------------------------------------
 def print_counts(conn: sqlite3.Connection) -> None:
-    print("\nRow counts:")
+    print("\nКоличество строк:")
     for table in ("publishers", "teams", "heroes", "powers", "hero_powers", "sources"):
         count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
         print(f"  {table:<12} {count}")
 
 
 def validate(conn: sqlite3.Connection) -> None:
-    print("\nValidation:")
+    print("\nПроверка:")
     per_publisher = conn.execute(
         """SELECT p.name, COUNT(*)
              FROM heroes h JOIN publishers p ON p.id = h.publisher_id
             GROUP BY p.name ORDER BY COUNT(*) DESC"""
     ).fetchall()
-    print("  heroes per publisher:")
+    print("  героев по издателям:")
     for name, count in per_publisher:
         print(f"    {name:<20} {count}")
     without_team = conn.execute("SELECT COUNT(*) FROM heroes WHERE team_id IS NULL").fetchone()[0]
-    print(f"  heroes without a team: {without_team}")
+    print(f"  героев без команды: {without_team}")
     without_powers = conn.execute(
         "SELECT COUNT(*) FROM heroes WHERE id NOT IN (SELECT hero_id FROM hero_powers)"
     ).fetchone()[0]
-    print(f"  heroes without any power: {without_powers}")
+    print(f"  героев без способностей: {without_powers}")
     fk_problems = conn.execute("PRAGMA foreign_key_check").fetchall()
     if fk_problems:
-        print(f"  FOREIGN KEY PROBLEMS FOUND: {fk_problems}")
+        print(f"  НАЙДЕНЫ ПРОБЛЕМЫ С ВНЕШНИМИ КЛЮЧАМИ: {fk_problems}")
     else:
-        print("  foreign key check: OK (no problems)")
+        print("  проверка внешних ключей: OK (проблем нет)")
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Точка входа
 # ---------------------------------------------------------------------------
 def main() -> int:
-    print(f"Building {DB_PATH.name} ...")
+    print(f"Строим {DB_PATH.name} ...")
     conn = create_database()
 
     live_rows: list[dict] = []
     source_used = None
     if requests is not None:
-        print("Trying Wikidata (preferred source) ...")
+        print("Пробуем Wikidata (приоритетный источник) ...")
         rows = fetch_wikidata()
         if rows:
             live_rows, source_used = rows, "Wikidata"
         else:
-            print("Wikidata unavailable; trying DBpedia ...")
+            print("Wikidata недоступна; пробуем DBpedia ...")
             rows = fetch_dbpedia()
             if rows:
                 live_rows, source_used = rows, "DBpedia"
 
     if source_used:
         hero_count = build_online(conn, live_rows)
-        print(f"\nBuilt database: {len(FAMOUS)} curated core + live volume from {source_used} "
-              f"= {hero_count} heroes total.")
+        print(f"\nБаза готова: {len(FAMOUS)} базовых + данные из {source_used} "
+              f"= {hero_count} героев итого.")
         if hero_count < MIN_HEROES:
-            print(f"WARNING: {hero_count} heroes is below the {MIN_HEROES} minimum target "
-                  f"(kept the valid subset).")
+            print(f"ВНИМАНИЕ: героев {hero_count}, это меньше минимума {MIN_HEROES} "
+                  f"(сохранено валидное подмножество).")
         elif hero_count < PREFERRED_HEROES:
-            print(f"NOTE: {hero_count} heroes (below the preferred {PREFERRED_HEROES}, but acceptable).")
+            print(f"ПРИМЕЧАНИЕ: героев {hero_count} (меньше желаемых {PREFERRED_HEROES}, но приемлемо).")
     else:
         if requests is None:
-            print("\n'requests' is not installed - using the offline fallback dataset.")
+            print("\nМодуль 'requests' не установлен — используем офлайн-набор данных.")
         else:
-            print("\nCould not fetch live data - using the offline fallback dataset.")
+            print("\nНе удалось получить данные из сети — используем офлайн-набор данных.")
         hero_count = build_fallback(conn)
-        print(f"Loaded {hero_count} heroes from seed_manual_fallback.sql.")
-        print("WARNING: this is the small offline teaching dataset, not the full live set.")
+        print(f"Загружено {hero_count} героев из seed_manual_fallback.sql.")
+        print("ВНИМАНИЕ: это небольшой офлайн-набор для обучения, а не полная база.")
 
     print_counts(conn)
     validate(conn)
     conn.close()
-    print(f"\nDone. Database written to {DB_PATH}")
+    print(f"\nГотово. База данных записана в {DB_PATH}")
     return 0
 
 
