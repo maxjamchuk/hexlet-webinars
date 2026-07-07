@@ -1,188 +1,265 @@
-# Superheroes SQLite Database — SQL Basics Webinar
+# SQL для разработчиков и DevOps
 
-A small, self-contained project that builds a local SQLite database of real comic
-book characters. It is designed for teaching the **basics of SQL**: `SELECT`,
-`WHERE`, `ORDER BY`, `LIMIT`, `INSERT`, `UPDATE`, `DELETE`, `FOREIGN KEY`,
-`INNER JOIN`, `LEFT JOIN`, `COUNT`, and `GROUP BY`.
+Материалы к вебинару по основам SQL.
 
-The data is collected from **open, machine-readable sources** (Wikidata and, as a
-fallback, DBpedia). Only short factual fields are stored — no long descriptions,
-biographies, or plot summaries.
+Вебинар построен вокруг небольшой SQLite-базы `superheroes.sqlite` с персонажами комиксов. На этой базе удобно разбирать базовые SQL-команды: `SELECT`, `WHERE`, `ORDER BY`, `LIMIT`, `INSERT`, `UPDATE`, `DELETE`, `FOREIGN KEY`, `INNER JOIN`, `LEFT JOIN`, `COUNT` и `GROUP BY`.
 
----
+## Презентация
 
-## Files
+[Открыть презентацию в Google Slides](https://docs.google.com/presentation/d/1pyj2oK_sf2iqq_aPTXpWekRJ5NzEfV0bUkLANh4PODM/edit)
 
-| File | What it is |
-|------|------------|
-| `build_db.py` | Python script that creates and fills `superheroes.sqlite`. |
-| `schema.sql` | All `CREATE TABLE` / `CREATE INDEX` statements. |
-| `seed_manual_fallback.sql` | Offline dataset (~60 famous characters), used only if the internet fetch fails. |
-| `examples.sql` | Ready-to-run teaching queries, grouped by topic. |
-| `superheroes.sqlite` | The generated database (created by `build_db.py`). |
-| `README.md` | This file. |
+## Что понадобится на вебинаре
 
----
+Для участия в вебинаре достаточно двух файлов:
 
-## Requirements
+| Файл | Для чего нужен |
+|------|----------------|
+| `superheroes.sqlite` | Готовая SQLite-база данных с таблицами и данными. |
+| `examples.sql` | Примеры SQL-запросов, которые можно запускать во время занятия. |
 
-- **Python 3.11+**
-- **`requests`** (only for live data fetching)
-- **`sqlite3`** — part of the Python standard library, nothing to install
-- The **`sqlite3` command-line tool** is handy for exploring the database
-  (on Debian/Ubuntu: `sudo apt install sqlite3`).
+Остальные файлы нужны в основном для пересборки базы и понимания внутренней структуры проекта.
 
-Install the one third-party dependency:
+## Список файлов
 
-```bash
-pip install requests
-```
+| Файл | Описание |
+|------|----------|
+| `superheroes.sqlite` | Готовая база данных SQLite. Именно её удобнее всего использовать на вебинаре. |
+| `examples.sql` | Набор готовых SQL-запросов для демонстрации и практики. |
+| `schema.sql` | SQL-схема базы: `CREATE TABLE`, `CREATE INDEX`, связи и ограничения. |
+| `build_db.py` | Python-скрипт, который создаёт базу `superheroes.sqlite` с нуля. |
+| `seed_manual_fallback.sql` | Резервный офлайн-набор данных, который используется, если не удалось получить данные из открытых источников. |
+| `README.md` | Описание проекта и инструкция по использованию. |
 
----
+## Как открыть базу
 
-## How to build the database
+Нужен установленный SQLite.
 
-From this folder:
+Проверить, что команда доступна:
 
 ```bash
-python build_db.py
+sqlite3 --version
 ```
 
-The script will:
-
-1. Create a fresh `superheroes.sqlite` (any existing one is replaced).
-2. Enable foreign keys and create all tables and indexes from `schema.sql`.
-3. Insert a small **curated core** of famous characters (Spider-Man, Batman,
-   Superman, Hellboy, Spawn, …) using only short, commonly-known facts. This
-   guarantees the recognisable names are always present, with real names, teams
-   and powers filled in.
-4. Fetch **additional** real characters to add volume:
-   - **Wikidata** is tried first (open, machine-readable).
-   - If Wikidata is unavailable, **DBpedia** is used (also open data, extracted
-     from Wikipedia). Comic series/titles are filtered out, and each character's
-     powers and first-appearance year are read from their own Wikipedia
-     categories.
-5. If both live sources are unreachable, load the offline
-   `seed_manual_fallback.sql` (about 60 well-known characters) and print a
-   warning.
-6. Print row counts and run validation checks (including
-   `PRAGMA foreign_key_check`).
-
-> The script targets up to 1000 heroes (preferred ~500, minimum ~300). A typical
-> live run produces roughly 400 heroes across the four publishers. If fewer are
-> available from reliable sources, it keeps the valid subset and warns you.
-
-Because the extra characters come from live open data, the exact contents differ
-a little from run to run — which is itself a realistic talking point about real
-datasets.
-
----
-
-## How to open and explore the database
+Открыть базу:
 
 ```bash
 sqlite3 superheroes.sqlite
 ```
 
-Some helpful settings once you are inside the `sqlite3` prompt:
+Полезные команды внутри `sqlite3`:
 
 ```sql
-.headers on      -- show column names
-.mode column     -- align output in columns
-.tables          -- list all tables
-.schema heroes   -- show the CREATE statement for a table
+.headers on
+.mode column
+.tables
+.schema heroes
 SELECT * FROM heroes LIMIT 5;
-.quit            -- leave
+.quit
 ```
 
-## How to run the example queries
+Что делают эти команды:
 
-Run the whole teaching file at once:
+| Команда | Что делает |
+|---------|------------|
+| `.headers on` | Показывает названия колонок в результате запроса. |
+| `.mode column` | Выводит результат в виде аккуратной таблицы. |
+| `.tables` | Показывает список таблиц в базе. |
+| `.schema heroes` | Показывает SQL-схему таблицы `heroes`. |
+| `.quit` | Выход из `sqlite3`. |
+
+## Как запускать примеры
+
+Можно выполнить весь файл с примерами сразу:
 
 ```bash
 sqlite3 superheroes.sqlite ".read examples.sql"
 ```
 
-For a webinar it is better to open the database and paste the queries **one at a
-time** so students can see each result. Open `examples.sql` in your editor and
-copy queries as you go.
+Но для вебинара лучше открывать `examples.sql` в редакторе и запускать запросы по одному. Так проще видеть результат каждого запроса и обсуждать, что именно произошло.
 
----
+## Что есть в базе
 
-## What each table means
+В базе несколько связанных таблиц.
 
-- **publishers** — the comic companies (Marvel, DC, Dark Horse, Image).
-- **teams** — super teams (Avengers, X-Men, Justice League, …). Each team belongs
-  to one publisher.
-- **heroes** — the main table: one row per character, with a link to its publisher
-  and (optionally) a team.
-- **powers** — a catalog of abilities, each with a category (physical, mental,
-  movement, mystical, technology, equipment, skill, biological, cosmic, unknown).
-- **hero_powers** — the many-to-many link between heroes and powers.
-- **sources** — provenance: where each publisher/hero row came from and when.
+| Таблица | Что хранит |
+|---------|------------|
+| `publishers` | Издательства: Marvel, DC, Dark Horse, Image. |
+| `teams` | Команды персонажей: Avengers, X-Men, Justice League и другие. |
+| `heroes` | Основная таблица с персонажами. |
+| `powers` | Справочник способностей. |
+| `hero_powers` | Связь многие-ко-многим между героями и способностями. |
+| `sources` | Информация об источниках данных. |
 
-### The `heroes` columns
+## Главная таблица `heroes`
 
-| Column | Meaning |
-|--------|---------|
-| `id` | Primary key. |
-| `alias` | Public/hero name (e.g., *Spider-Man*). |
-| `real_name` | Secret identity, when commonly known (else `NULL`). |
-| `publisher_id` | Required link to `publishers`. |
-| `team_id` | Optional link to `teams` (`NULL` if none). |
-| `alignment` | One of `hero`, `antihero`, `villain`, `unknown`. |
-| `first_appearance_year` | Year of first appearance, when known (else `NULL`). |
-| `city` | Home city, when known (else `NULL`). |
-| `power_level` | Artificial teaching value, 1–100 (see below). |
-| `is_active` | Simplified teaching flag: `1` = active, `0` = not (see below). |
-| `wikidata_qid` | Wikidata identifier, when available (unique). |
-| `source_url` | Link to the source record. |
+| Колонка | Что означает |
+|---------|--------------|
+| `id` | Первичный ключ. Уникальный идентификатор героя. |
+| `alias` | Публичное имя персонажа, например `Spider-Man`. |
+| `real_name` | Настоящее имя, если оно известно. Может быть `NULL`. |
+| `publisher_id` | Ссылка на издательство в таблице `publishers`. |
+| `team_id` | Ссылка на команду в таблице `teams`. Может быть `NULL`. |
+| `alignment` | Условный тип персонажа: `hero`, `antihero`, `villain`, `unknown`. |
+| `first_appearance_year` | Год первого появления, если известен. |
+| `city` | Город, если известен. |
+| `power_level` | Учебное числовое поле от 1 до 100. Не канон. |
+| `is_active` | Учебный флаг активности: `1` или `0`. |
+| `wikidata_qid` | Идентификатор Wikidata, если есть. |
+| `source_url` | Ссылка на источник данных. |
 
----
+## Какие темы SQL можно отработать
 
-## Which fields are factual, and which are for teaching only
+### Простые запросы
 
-**Factual** (collected from open sources or commonly-known facts):
-`alias`, `real_name`, `publisher`, `team`, `first_appearance_year`, `city`,
-`alignment`, `wikidata_qid`, `source_url`, and the list of `powers`.
+```sql
+SELECT * FROM heroes LIMIT 10;
+```
 
-**Artificial / teaching-only:**
+```sql
+SELECT alias, real_name, power_level
+FROM heroes
+ORDER BY power_level DESC
+LIMIT 10;
+```
 
-- **`power_level`** is **NOT canon.** There is no official, comparable "power
-  level" for comic characters. This project generates a deterministic number
-  from 1–100 based on how well-known a character is (how many Wikipedia language
-  editions or categories mention them) plus how many powers we recorded. It exists
-  purely so students have a numeric column to practice `ORDER BY`, `>=`, `AVG`,
-  etc. Treat it as a game stat, not a fact.
-- **`is_active`** is a **simplified flag** for teaching `WHERE` and `UPDATE`. Live
-  data defaults everyone to `1`; the offline dataset marks a few legacy characters
-  as `0`. It is not a precise statement about current comic continuity.
+### Фильтрация
 
-When a factual field is unknown, it is stored as `NULL` — nothing is invented.
+```sql
+SELECT alias, alignment
+FROM heroes
+WHERE alignment = 'hero';
+```
 
----
+```sql
+SELECT alias, power_level
+FROM heroes
+WHERE power_level >= 80;
+```
 
-## Data honesty and limitations
+### Сортировка и ограничения
 
-- This is an **educational** dataset for practicing SQL, **not** a definitive comic
-  encyclopedia.
-- No long copyrighted text (descriptions, biographies, plot summaries) is stored.
-- Data is only as complete and correct as the open sources. Expect some gaps and
-  the occasional oddity — that is realistic and makes for good `NULL`-handling and
-  data-quality discussions.
-- Source metadata is recorded in the `sources` table and in the `source_url` /
-  `wikidata_qid` columns so results can be traced back.
+```sql
+SELECT alias, first_appearance_year
+FROM heroes
+WHERE first_appearance_year IS NOT NULL
+ORDER BY first_appearance_year
+LIMIT 10;
+```
 
----
+### Изменение данных
 
-## Rebuilding from scratch
+```sql
+UPDATE heroes
+SET is_active = 0
+WHERE id = 1;
+```
 
-Just run the script again — it always recreates the database:
+Важно: перед `UPDATE` и `DELETE` всегда проверяйте `WHERE`.
+
+### Удаление данных
+
+```sql
+DELETE FROM heroes
+WHERE id = 9999;
+```
+
+Опасный вариант:
+
+```sql
+DELETE FROM heroes;
+```
+
+Такой запрос удалит все строки из таблицы.
+
+### Связи таблиц
+
+```sql
+SELECT h.alias, p.name AS publisher
+FROM heroes h
+INNER JOIN publishers p ON p.id = h.publisher_id;
+```
+
+### LEFT JOIN
+
+```sql
+SELECT h.alias, t.name AS team
+FROM heroes h
+LEFT JOIN teams t ON t.id = h.team_id;
+```
+
+`LEFT JOIN` покажет всех героев, даже если у героя не указана команда.
+
+### Группировка
+
+```sql
+SELECT p.name, COUNT(h.id) AS heroes_count
+FROM publishers p
+LEFT JOIN heroes h ON h.publisher_id = p.id
+GROUP BY p.id, p.name
+ORDER BY heroes_count DESC;
+```
+
+## Как пересобрать базу
+
+Этот раздел нужен скорее автору материалов, чем студентам.
+
+Для пересборки базы нужен Python 3.11+.
+
+Установить зависимость:
+
+```bash
+pip install requests
+```
+
+Запустить сборку:
 
 ```bash
 python build_db.py
 ```
 
-To force the offline dataset (for example, with no internet), you can uninstall or
-hide `requests`, or simply run the script while offline; it will detect the failure
-and load `seed_manual_fallback.sql` automatically.
+Скрипт:
+
+1. удалит старую `superheroes.sqlite`, если она есть;
+2. создаст новую базу по схеме из `schema.sql`;
+3. добавит базовый набор известных персонажей;
+4. попробует получить дополнительные данные из открытых источников;
+5. если интернет-источники недоступны, использует `seed_manual_fallback.sql`;
+6. выведет статистику по таблицам;
+7. проверит целостность внешних ключей через `PRAGMA foreign_key_check`.
+
+## Источники данных
+
+Данные собираются из открытых машиночитаемых источников:
+
+- Wikidata;
+- DBpedia как резервный источник;
+- небольшой ручной fallback-набор на случай проблем с сетью.
+
+В базе хранятся только короткие фактические поля: имена, издательства, команды, годы, города, способности и ссылки на источники.
+
+Длинные описания, биографии, пересказы сюжетов и другие большие текстовые материалы не сохраняются.
+
+## Важное про данные
+
+Часть данных может быть неполной или спорной, потому что открытые источники не всегда идеально структурированы. Это нормально для учебного проекта: на таких данных удобно показывать `NULL`, фильтрацию, связи таблиц и базовые вопросы качества данных.
+
+### `power_level`
+
+`power_level` — искусственное учебное поле.
+
+Поле нужно, чтобы было удобно тренировать:
+
+- `ORDER BY`;
+- сравнения через `>`, `<`, `>=`, `<=`;
+- диапазоны;
+- агрегатные функции вроде `AVG`.
+
+### `is_active`
+
+`is_active` — тоже упрощённое учебное поле.
+
+Оно нужно для примеров с `WHERE`, `UPDATE` и фильтрацией.
+
+## Статус материалов
+
+Материалы можно дорабатывать: добавлять новые запросы в `examples.sql`, расширять схему, менять наполнение базы и дополнять практические задания.
