@@ -25,7 +25,7 @@ python 06_practice_add_json_renderer_solution.py
 | `01_classic_shapes.py` | Классический пример: фигуры с методом `area()` |
 | `02_bad_task_renderer.py` | Антипаттерн: `if/elif` внутри функции рендеринга |
 | `03_polymorphic_task_renderer.py` | Рефакторинг: рендереры с общим методом `render()` |
-| `04_duck_typing.py` | Утиная типизация: Python проверяет метод, а не тип |
+| `04_duck_typing.py` | Утиная типизация: Python не требует общего родителя — он пытается вызвать метод в момент выполнения |
 | `05_when_if_is_ok.py` | Когда `if/elif` — нормально |
 | `06_practice_add_json_renderer.py` | Задание: добавить `JsonRenderer` |
 | `06_practice_add_json_renderer_solution.py` | Решение задания |

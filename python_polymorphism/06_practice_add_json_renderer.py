@@ -10,22 +10,22 @@ task = {
 
 class TextRenderer:
     def render(self, task):
-        print(f"{task['name']} | {task['status']} | {task['executor']}")
+        return f"{task['name']} | {task['status']} | {task['executor']}"
 
 
 class MarkdownRenderer:
     def render(self, task):
-        print(f"**{task['name']}** — {task['status']} ({task['executor']})")
+        return f"**{task['name']}** — {task['status']} ({task['executor']})"
 
 
 # TODO: добавьте класс JsonRenderer с методом render(task).
-# Метод должен выводить строку в формате JSON без использования модуля json.
-# Пример вывода:
+# Метод должен возвращать строку в формате JSON без использования модуля json.
+# Пример возвращаемой строки:
 # {"name": "Исправить баг", "status": "В работе", "executor": "Анна"}
 
 
 def render_task(task, renderer):
-    renderer.render(task)
+    return renderer.render(task)
 
 
 if __name__ == "__main__":
@@ -36,4 +36,4 @@ if __name__ == "__main__":
     ]
 
     for renderer in renderers:
-        render_task(task, renderer)
+        print(render_task(task, renderer))

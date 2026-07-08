@@ -10,17 +10,17 @@ task = {
 
 class TextRenderer:
     def render(self, task):
-        print(f"{task['name']} | {task['status']} | {task['executor']}")
+        return f"{task['name']} | {task['status']} | {task['executor']}"
 
 
 class MarkdownRenderer:
     def render(self, task):
-        print(f"**{task['name']}** — {task['status']} ({task['executor']})")
+        return f"**{task['name']}** — {task['status']} ({task['executor']})"
 
 
 class HtmlRenderer:
     def render(self, task):
-        print(
+        return (
             f"<p><b>{task['name']}</b> — {task['status']} "
             f"({task['executor']})</p>"
         )
@@ -29,7 +29,7 @@ class HtmlRenderer:
 # Функция не проверяет тип рендерера.
 # Она просто вызывает render() — и каждый рендерер делает своё.
 def render_task(task, renderer):
-    renderer.render(task)
+    return renderer.render(task)
 
 
 if __name__ == "__main__":
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     ]
 
     for renderer in renderers:
-        render_task(task, renderer)
+        print(render_task(task, renderer))
 
     # Добавить новый формат = добавить новый класс.
     # Функцию render_task трогать не нужно.
