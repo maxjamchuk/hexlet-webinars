@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.py[codz]
+*.egg-info/
+build/
+dist/
+.idea/
+.vscode/
