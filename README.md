@@ -29,6 +29,7 @@
 | [`sql_for_dev_and_ops`](./sql_for_dev_and_ops) | SQL для разработчиков и DevOps | Вебинар по основам SQL на SQLite-базе с супергероями. Разбираются `SELECT`, `WHERE`, `ORDER BY`, `LIMIT`, `INSERT`, `UPDATE`, `DELETE`, `FOREIGN KEY`, `JOIN`, `COUNT` и `GROUP BY`. |
 | [`python_polymorphism`](./python_polymorphism) | Python: полиморфизм | Воркшоп по классическому полиморфизму, общему интерфейсу и утиной типизации. Разбираются проблемы большого `if/elif`, рефакторинг к отдельным классам и добавление нового поведения без изменения центральной функции. |
 | [`python_rest`](./python_rest) | Python: REST API | Практический воркшоп по работе с HTTP API: GET, POST, PUT, PATCH, DELETE, path- и query-параметры, заголовки, JSON, коды ответа, `curl`, `requests`, Docker и внешний TMDB API. |
+| [`task-service`](./task-service) | Python: продвинутое тестирование | Воркшоп на примере Flask CRUD API: `pytest.raises`, параметризация, файловые side effects, фикстуры и `tmp_path`, Flask `test_client`, Dependency Injection, `Mock`, `side_effect`, `monkeypatch`, тестирование внешнего HTTP и запуск через Docker. |
 
 ## Для кого эти материалы
 
