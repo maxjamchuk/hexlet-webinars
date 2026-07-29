@@ -35,21 +35,21 @@ $env:API_BASE_URL = "http://localhost:8080"
 ```
 Завершающий `/` необязателен: Python-примеры удаляют его автоматически.
 
-## 3. Настройте TMDB-токен
+## 3. Настройте TMDB API Key v3
 
-Только пример `04_tmdb_get` обращается к внешнему API. Токен не хранится в
-репозитории и передаётся через окружение.
+Только пример `04_tmdb_get` обращается к внешнему API. Ключ не хранится в
+репозитории: он передаётся через окружение и query-параметр `api_key`.
 
 Bash:
 
 ```bash
-export TMDB_API_TOKEN="your-read-access-token"
+export TMDB_API_KEY="your-api-key-v3"
 ```
 
 PowerShell:
 
 ```powershell
-$env:TMDB_API_TOKEN = "your-read-access-token"
+$env:TMDB_API_KEY = "your-api-key-v3"
 ```
 
 ## Порядок прохождения
@@ -57,7 +57,7 @@ $env:TMDB_API_TOKEN = "your-read-access-token"
 1. `01_get_collection` — коллекция и пагинационный envelope.
 2. `02_get_movie` — path-параметр и 404.
 3. `03_query_parameters` — фильтры, пагинация и 422.
-4. `04_tmdb_get` — внешний read-only API и Bearer-токен.
+4. `04_tmdb_get` — внешний read-only API и TMDB API Key v3.
 5. `05_post_movie` — создание ресурса и получение фактического `id`.
 6. `06_put_movie` — полная замена по этому `id`.
 7. `07_patch_movie` — частичное изменение того же фильма.

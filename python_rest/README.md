@@ -2,7 +2,7 @@
 
 Материалы к вебинару по работе с REST API из Python.
 
-Вебинар построен вокруг готового учебного Movie API. На нём удобно разобрать устройство HTTP-запроса и ответа, методы GET, POST, PUT, PATCH и DELETE, path- и query-параметры, заголовки, JSON, коды состояния, Bearer-токены и работу с API через `curl` и библиотеку `requests`.
+Вебинар построен вокруг готового учебного Movie API. На нём удобно разобрать устройство HTTP-запроса и ответа, методы GET, POST, PUT, PATCH и DELETE, path- и query-параметры, заголовки, JSON, коды состояния, API-ключи и работу с API через `curl` и библиотеку `requests`.
 
 FastAPI используется как готовая серверная песочница. Основная тема вебинара — клиентская работа с HTTP API, а не устройство FastAPI-приложения.
 
@@ -17,7 +17,7 @@ FastAPI используется как готовая серверная пес
 - Docker с поддержкой Docker Compose;
 - терминал;
 - Python для примеров с `requests`;
-- TMDB API Read Access Token для демонстрации внешнего API.
+- TMDB API Key v3 для демонстрации внешнего API.
 
 Учебный API запускается одной командой и не требует отдельно установленной базы данных.
 
@@ -97,7 +97,7 @@ docker compose up --build
 ```dotenv
 API_PORT=8080
 API_BASE_URL=http://localhost:8080
-TMDB_API_TOKEN=
+TMDB_API_KEY=
 ```
 
 Копировать `.env.example` необязательно: Docker Compose и клиентские примеры уже используют порт `8080` по умолчанию.
@@ -108,7 +108,7 @@ TMDB_API_TOKEN=
 cp .env.example .env
 ```
 
-Настоящий TMDB-токен нельзя добавлять в Git.
+Настоящий TMDB API Key v3 нельзя добавлять в Git.
 
 ## Запуск curl-примеров
 
@@ -229,18 +229,18 @@ python examples/python/03_query_parameters.py
 
 ### 4. Внешний TMDB API
 
-Для выполнения примера нужен TMDB API Read Access Token.
+Для выполнения примера нужен TMDB API Key v3.
 
 Bash:
 
 ```bash
-export TMDB_API_TOKEN="your-read-access-token"
+export TMDB_API_KEY="your-api-key-v3"
 ```
 
 PowerShell:
 
 ```powershell
-$env:TMDB_API_TOKEN = "your-read-access-token"
+$env:TMDB_API_KEY = "your-api-key-v3"
 ```
 
 Запуск:
@@ -253,19 +253,19 @@ python examples/python/04_tmdb_get.py
 Сначала выполняется поиск фильма:
 
 ```http
-GET /3/search/movie?query=Interstellar&language=en-US&page=1
+GET /3/search/movie?api_key=<key>&query=Interstellar&language=en-US&page=1
 ```
 
 Затем ID из результата используется в следующем запросе:
 
 ```http
-GET /3/movie/{movie_id}
+GET /3/movie/{movie_id}?api_key=<key>&language=en-US
 ```
 
-Токен передаётся через заголовок:
+API Key v3 передаётся через query-параметр:
 
 ```http
-Authorization: Bearer <token>
+api_key=<key>
 ```
 
 ### 5. Создание ресурса через POST
@@ -461,13 +461,15 @@ PATCH изменяет только переданные поля.
 
 ### Работа с секретами
 
-Токены нельзя хранить прямо в исходном коде:
+API-ключи нельзя хранить прямо в исходном коде:
 
 ```python
-token = os.getenv("TMDB_API_TOKEN")
+tmdb_api_key = os.getenv("TMDB_API_KEY")
 ```
 
-Секрет передаётся через окружение и HTTP-заголовок, но не попадает в репозиторий.
+Секрет передаётся через окружение и query-параметр `api_key`, но не попадает в
+репозиторий. Полный URL TMDB-запроса нельзя логировать: после отправки он
+содержит ключ.
 
 ## Запуск тестов
 
@@ -499,7 +501,7 @@ REST API — это HTTP-контракт между клиентом и сер�
 
 Плохой признак:
 
-> клиент предполагает конкретный ID, игнорирует ошибки, не задаёт timeout или хранит токен прямо в коде.
+> клиент предполагает конкретный ID, игнорирует ошибки, не задаёт timeout или хранит API-ключ прямо в коде.
 
 ## Статус материалов
 

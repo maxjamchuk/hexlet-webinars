@@ -7,10 +7,11 @@ export API_BASE_URL="http://localhost:8080"
 bash examples/curl/01_get_collection.sh
 ```
 
-TMDB-токен задаётся только через окружение:
+TMDB API Key v3 задаётся только через окружение и передаётся в
+query-параметре `api_key`:
 
 ```bash
-export TMDB_API_TOKEN="your-read-access-token"
+export TMDB_API_KEY="your-api-key-v3"
 bash examples/curl/04_tmdb_get.sh
 ```
 
@@ -18,7 +19,7 @@ bash examples/curl/04_tmdb_get.sh
 
 ```powershell
 $env:API_BASE_URL = "http://localhost:8080"
-$env:TMDB_API_TOKEN = "your-read-access-token"
+$env:TMDB_API_KEY = "your-api-key-v3"
 ```
 
 В Windows PowerShell используйте `curl.exe`, если имя `curl` связано с другим
@@ -27,7 +28,7 @@ $env:TMDB_API_TOKEN = "your-read-access-token"
 ```powershell
 curl.exe -i "$env:API_BASE_URL/movies?limit=3"
 curl.exe -i -X POST "$env:API_BASE_URL/movies" -H "Content-Type: application/json" --data '{"title":"Workshop Movie"}'
-curl.exe -i "https://api.themoviedb.org/3/search/movie?query=Interstellar&language=en-US&page=1" -H "Authorization: Bearer $env:TMDB_API_TOKEN"
+curl.exe -i -G "https://api.themoviedb.org/3/search/movie" --data-urlencode "api_key=$env:TMDB_API_KEY" --data-urlencode "query=Interstellar" --data-urlencode "language=en-US" --data-urlencode "page=1"
 ```
 
 Bash-эквиваленты:
@@ -35,7 +36,7 @@ Bash-эквиваленты:
 ```bash
 curl -i "$API_BASE_URL/movies?limit=3"
 curl -i -X POST "$API_BASE_URL/movies" -H "Content-Type: application/json" --data '{"title":"Workshop Movie"}'
-curl -i -G "https://api.themoviedb.org/3/search/movie" -H "Authorization: Bearer $TMDB_API_TOKEN" --data-urlencode "query=Interstellar" --data-urlencode "language=en-US" --data-urlencode "page=1"
+curl -i -G "https://api.themoviedb.org/3/search/movie" --data-urlencode "api_key=$TMDB_API_KEY" --data-urlencode "query=Interstellar" --data-urlencode "language=en-US" --data-urlencode "page=1"
 ```
 
 JSON можно необязательно передать в `python -m json.tool`, но сами примеры не

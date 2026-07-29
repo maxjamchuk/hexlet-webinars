@@ -14,14 +14,16 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 
 def run_tmdb_example(
-    token: str,
+    tmdb_api_key: str,
     request_get: Callable[..., requests.Response] = requests.get,
 ) -> int:
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
+    headers = {"Accept": "application/json"}
+    search_params = {
+        "api_key": tmdb_api_key,
+        "query": "Interstellar",
+        "language": "en-US",
+        "page": 1,
     }
-    search_params = {"query": "Interstellar", "language": "en-US", "page": 1}
 
     try:
         search_response = request_get(
@@ -30,14 +32,14 @@ def run_tmdb_example(
             params=search_params,
             timeout=TIMEOUT,
         )
-    except requests.RequestException as error:
-        print(f"TMDB search failed: {error}", file=sys.stderr)
+    except requests.RequestException:
+        print("TMDB search request failed.", file=sys.stderr)
         return 1
 
-    print(f"GET {search_response.url}")
+    print("GET /search/movie")
     print(f"Status: {search_response.status_code}")
     if search_response.status_code == 401:
-        print("TMDB rejected the token (401 Unauthorized).", file=sys.stderr)
+        print("TMDB rejected the API Key v3 (401 Unauthorized).", file=sys.stderr)
         return 1
     if search_response.status_code != 200:
         print(f"Unexpected TMDB status: {search_response.status_code}", file=sys.stderr)
@@ -62,17 +64,17 @@ def run_tmdb_example(
         details_response = request_get(
             f"{TMDB_BASE_URL}/movie/{movie_id}",
             headers=headers,
-            params={"language": "en-US"},
+            params={"api_key": tmdb_api_key, "language": "en-US"},
             timeout=TIMEOUT,
         )
-    except requests.RequestException as error:
-        print(f"TMDB details request failed: {error}", file=sys.stderr)
+    except requests.RequestException:
+        print("TMDB details request failed.", file=sys.stderr)
         return 1
 
-    print(f"GET {details_response.url}")
+    print(f"GET /movie/{movie_id}")
     print(f"Status: {details_response.status_code}")
     if details_response.status_code == 401:
-        print("TMDB rejected the token (401 Unauthorized).", file=sys.stderr)
+        print("TMDB rejected the API Key v3 (401 Unauthorized).", file=sys.stderr)
         return 1
     if details_response.status_code != 200:
         print(f"Unexpected TMDB status: {details_response.status_code}", file=sys.stderr)
@@ -91,14 +93,14 @@ def run_tmdb_example(
 
 
 def main() -> int:
-    token = os.getenv("TMDB_API_TOKEN")
-    if not token:
+    tmdb_api_key = os.getenv("TMDB_API_KEY")
+    if not tmdb_api_key:
         print(
-            "TMDB_API_TOKEN is not set. Export a TMDB API Read Access Token first.",
+            "TMDB_API_KEY is not set. Export a TMDB API Key v3 first.",
             file=sys.stderr,
         )
         return 1
-    return run_tmdb_example(token)
+    return run_tmdb_example(tmdb_api_key)
 
 
 if __name__ == "__main__":

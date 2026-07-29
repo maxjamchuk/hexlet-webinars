@@ -9,6 +9,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
+import requests
+
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples" / "python"
 sys.path.insert(0, str(EXAMPLES_DIR))
@@ -41,13 +43,13 @@ class FakeGet:
 
 
 class TmdbExampleTest(unittest.TestCase):
-    def test_search_uses_bearer_params_and_requests_first_movie_details(self):
-        token = "test-token-that-must-not-be-printed"
+    def test_search_uses_api_key_params_and_requests_first_movie_details(self):
+        api_key = "test-api-key"
         fake_get = FakeGet(
             [
                 FakeResponse(
                     200,
-                    "https://api.themoviedb.org/3/search/movie?query=Interstellar",
+                    f"https://api.themoviedb.org/3/search/movie?api_key={api_key}",
                     {
                         "total_results": 1,
                         "results": [
@@ -61,7 +63,7 @@ class TmdbExampleTest(unittest.TestCase):
                 ),
                 FakeResponse(
                     200,
-                    "https://api.themoviedb.org/3/movie/157336?language=en-US",
+                    f"https://api.themoviedb.org/3/movie/157336?api_key={api_key}",
                     {
                         "title": "Interstellar",
                         "release_date": "2014-11-05",
@@ -74,7 +76,7 @@ class TmdbExampleTest(unittest.TestCase):
         output = io.StringIO()
 
         with redirect_stdout(output):
-            result = tmdb_example.run_tmdb_example(token, request_get=fake_get)
+            result = tmdb_example.run_tmdb_example(api_key, request_get=fake_get)
 
         self.assertEqual(result, 0)
         self.assertEqual(len(fake_get.calls), 2)
@@ -82,28 +84,36 @@ class TmdbExampleTest(unittest.TestCase):
         self.assertEqual(
             search_url, "https://api.themoviedb.org/3/search/movie"
         )
-        self.assertEqual(
-            search_kwargs["headers"]["Authorization"], f"Bearer {token}"
-        )
+        self.assertNotIn("Authorization", search_kwargs["headers"])
+        self.assertEqual(search_kwargs["headers"]["Accept"], "application/json")
         self.assertEqual(
             search_kwargs["params"],
-            {"query": "Interstellar", "language": "en-US", "page": 1},
+            {
+                "api_key": api_key,
+                "query": "Interstellar",
+                "language": "en-US",
+                "page": 1,
+            },
         )
         details_url, details_kwargs = fake_get.calls[1]
         self.assertEqual(
             details_url, "https://api.themoviedb.org/3/movie/157336"
         )
-        self.assertEqual(details_kwargs["params"], {"language": "en-US"})
-        self.assertNotIn(token, output.getvalue())
+        self.assertNotIn("Authorization", details_kwargs["headers"])
+        self.assertEqual(
+            details_kwargs["params"],
+            {"api_key": api_key, "language": "en-US"},
+        )
+        self.assertNotIn(api_key, output.getvalue())
 
-    def test_missing_token_has_clear_message(self):
+    def test_missing_api_key_has_clear_message(self):
         errors = io.StringIO()
 
         with patch.dict(os.environ, {}, clear=True), redirect_stderr(errors):
             result = tmdb_example.main()
 
         self.assertEqual(result, 1)
-        self.assertIn("TMDB_API_TOKEN is not set", errors.getvalue())
+        self.assertIn("TMDB_API_KEY is not set", errors.getvalue())
 
     def test_empty_search_result_stops_without_details_request(self):
         fake_get = FakeGet(
@@ -118,7 +128,7 @@ class TmdbExampleTest(unittest.TestCase):
 
         with redirect_stdout(io.StringIO()):
             result = tmdb_example.run_tmdb_example(
-                "valid-test-token", request_get=fake_get
+                "test-api-key", request_get=fake_get
             )
 
         self.assertEqual(result, 0)
@@ -137,11 +147,29 @@ class TmdbExampleTest(unittest.TestCase):
 
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             result = tmdb_example.run_tmdb_example(
-                "invalid-test-token", request_get=fake_get
+                "test-api-key", request_get=fake_get
             )
 
         self.assertEqual(result, 1)
         self.assertEqual(len(fake_get.calls), 1)
+
+    def test_request_error_does_not_print_api_key(self):
+        api_key = "test-api-key"
+        errors = io.StringIO()
+
+        def failing_get(*args, **kwargs):
+            raise requests.RequestException(
+                f"request failed for ?api_key={api_key}"
+            )
+
+        with redirect_stderr(errors):
+            result = tmdb_example.run_tmdb_example(
+                api_key,
+                request_get=failing_get,
+            )
+
+        self.assertEqual(result, 1)
+        self.assertNotIn(api_key, errors.getvalue())
 
 
 if __name__ == "__main__":
