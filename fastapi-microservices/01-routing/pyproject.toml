@@ -1,0 +1,9 @@
+[project]
+name = "anomaly-registry-routing"
+version = "0.1.0"
+description = "Маршрутизация и параметры FastAPI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115,<1",
+]

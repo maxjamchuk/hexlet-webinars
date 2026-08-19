@@ -1,0 +1,10 @@
+[project]
+name = "anomaly-registry-sqlalchemy"
+version = "0.1.0"
+description = "FastAPI CRUD с SQLite и SQLAlchemy"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115,<1",
+    "sqlalchemy>=2.0,<3",
+]
