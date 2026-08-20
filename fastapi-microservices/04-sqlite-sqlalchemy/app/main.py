@@ -1,6 +1,5 @@
-from typing import Annotated
-
-from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Response
+from fastapi import status as http_status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,7 +16,6 @@ from app.schemas import (
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Anomaly Registry API")
-SessionDependency = Annotated[Session, Depends(get_session)]
 
 
 def find_incident(session: Session, incident_id: int) -> Incident:
@@ -38,9 +36,14 @@ def read_health() -> dict[str, str]:
 
 
 @app.post(
-    "/incidents", response_model=IncidentRead, status_code=status.HTTP_201_CREATED
+    "/incidents",
+    response_model=IncidentRead,
+    status_code=http_status.HTTP_201_CREATED,
 )
-def create_incident(payload: IncidentCreate, session: SessionDependency) -> Incident:
+def create_incident(
+    payload: IncidentCreate,
+    session: Session = Depends(get_session),
+) -> Incident:
     incident = Incident(**payload.model_dump())
     session.add(incident)
     session.commit()
@@ -50,14 +53,14 @@ def create_incident(payload: IncidentCreate, session: SessionDependency) -> Inci
 
 @app.get("/incidents", response_model=list[IncidentRead])
 def read_incidents(
-    session: SessionDependency,
-    status_filter: Annotated[IncidentStatus | None, Query(alias="status")] = None,
+    status: IncidentStatus | None = None,
     category: Category | None = None,
     danger_level: int | None = Query(default=None, ge=1, le=5),
+    session: Session = Depends(get_session),
 ) -> list[Incident]:
     statement = select(Incident)
-    if status_filter is not None:
-        statement = statement.where(Incident.status == status_filter)
+    if status is not None:
+        statement = statement.where(Incident.status == status)
     if category is not None:
         statement = statement.where(Incident.category == category)
     if danger_level is not None:
@@ -66,7 +69,10 @@ def read_incidents(
 
 
 @app.get("/incidents/{incident_id}", response_model=IncidentRead)
-def read_incident(incident_id: int, session: SessionDependency) -> Incident:
+def read_incident(
+    incident_id: int,
+    session: Session = Depends(get_session),
+) -> Incident:
     return find_incident(session, incident_id)
 
 
@@ -74,7 +80,7 @@ def read_incident(incident_id: int, session: SessionDependency) -> Incident:
 def update_incident(
     incident_id: int,
     payload: IncidentUpdate,
-    session: SessionDependency,
+    session: Session = Depends(get_session),
 ) -> Incident:
     incident = find_incident(session, incident_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -84,9 +90,15 @@ def update_incident(
     return incident
 
 
-@app.delete("/incidents/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_incident(incident_id: int, session: SessionDependency) -> Response:
+@app.delete(
+    "/incidents/{incident_id}",
+    status_code=http_status.HTTP_204_NO_CONTENT,
+)
+def delete_incident(
+    incident_id: int,
+    session: Session = Depends(get_session),
+) -> Response:
     incident = find_incident(session, incident_id)
     session.delete(incident)
     session.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=http_status.HTTP_204_NO_CONTENT)

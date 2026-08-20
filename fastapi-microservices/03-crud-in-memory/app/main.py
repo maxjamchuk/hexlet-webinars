@@ -1,8 +1,7 @@
-from typing import Annotated
+from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi import status as http_status
 
-from fastapi import FastAPI, HTTPException, Query, Response, status
-
-from app.models import (
+from app.schemas import (
     Category,
     IncidentCreate,
     IncidentRead,
@@ -33,7 +32,9 @@ def read_health() -> dict[str, str]:
 
 
 @app.post(
-    "/incidents", response_model=IncidentRead, status_code=status.HTTP_201_CREATED
+    "/incidents",
+    response_model=IncidentRead,
+    status_code=http_status.HTTP_201_CREATED,
 )
 def create_incident(payload: IncidentCreate) -> IncidentRead:
     global next_id
@@ -45,13 +46,13 @@ def create_incident(payload: IncidentCreate) -> IncidentRead:
 
 @app.get("/incidents", response_model=list[IncidentRead])
 def read_incidents(
-    status_filter: Annotated[IncidentStatus | None, Query(alias="status")] = None,
+    status: IncidentStatus | None = None,
     category: Category | None = None,
-    danger_level: int | None = None,
+    danger_level: int | None = Query(default=None, ge=1, le=5),
 ) -> list[IncidentRead]:
     result = list(incidents.values())
-    if status_filter is not None:
-        result = [item for item in result if item.status == status_filter]
+    if status is not None:
+        result = [item for item in result if item.status == status]
     if category is not None:
         result = [item for item in result if item.category == category]
     if danger_level is not None:
@@ -72,8 +73,11 @@ def update_incident(incident_id: int, payload: IncidentUpdate) -> IncidentRead:
     return updated
 
 
-@app.delete("/incidents/{incident_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete(
+    "/incidents/{incident_id}",
+    status_code=http_status.HTTP_204_NO_CONTENT,
+)
 def delete_incident(incident_id: int) -> Response:
     find_incident(incident_id)
     del incidents[incident_id]
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=http_status.HTTP_204_NO_CONTENT)
