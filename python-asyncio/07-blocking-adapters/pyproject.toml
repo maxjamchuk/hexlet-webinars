@@ -1,0 +1,7 @@
+[project]
+name = "service-status-blocking-adapters"
+version = "0.1.0"
+description = "Блокирующий I/O и адаптация через asyncio.to_thread"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

@@ -1,0 +1,7 @@
+[project]
+name = "service-status-sequential-await"
+version = "0.1.0"
+description = "Последовательные await-проверки"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

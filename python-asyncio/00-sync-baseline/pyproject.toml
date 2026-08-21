@@ -1,0 +1,7 @@
+[project]
+name = "service-status-sync-baseline"
+version = "0.1.0"
+description = "Последовательные проверки сервисов"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

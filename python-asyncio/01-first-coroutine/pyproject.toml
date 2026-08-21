@@ -1,0 +1,7 @@
+[project]
+name = "service-status-first-coroutine"
+version = "0.1.0"
+description = "Первая корутина asyncio"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

@@ -1,0 +1,18 @@
+[project]
+name = "service-status-asyncio-bonus"
+version = "0.1.0"
+description = "Очередь и тестирование асинхронного кода"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+    "pytest-asyncio>=0.24,<2",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]

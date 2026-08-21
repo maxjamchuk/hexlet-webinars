@@ -1,0 +1,7 @@
+[project]
+name = "service-status-taskgroup-timeouts"
+version = "0.1.0"
+description = "TaskGroup, таймауты, ошибки и отмена"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
