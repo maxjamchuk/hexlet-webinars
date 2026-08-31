@@ -1,0 +1,16 @@
+[project]
+name = "space-customs-03-test-scenarios"
+version = "0.1.0"
+description = "Test scenarios for the Space Customs workshop"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

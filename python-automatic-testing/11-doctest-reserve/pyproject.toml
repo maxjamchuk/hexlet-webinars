@@ -1,0 +1,17 @@
+[project]
+name = "space-customs-11-doctest-reserve"
+version = "0.1.0"
+description = "Doctest reserve example for the Space Customs workshop"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+    "pytest-cov>=6,<8",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
