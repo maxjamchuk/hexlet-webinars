@@ -1,0 +1,18 @@
+[project]
+name = "data-formats-validation"
+version = "0.1.0"
+description = "Examples for the Hexlet data formats, validation and data quality workshop"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jsonschema>=4.23,<5",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

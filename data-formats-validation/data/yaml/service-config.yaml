@@ -1,0 +1,7 @@
+service:
+  name: data-importer
+  port: 8080
+  debug: false
+  formats:
+    - json
+    - csv
