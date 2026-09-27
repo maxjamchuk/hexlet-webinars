@@ -258,7 +258,7 @@ def check_networking(check):
             print(f"[OK] 05-networking/{stage}: API 200, proxy {status}, "
                   f"internal DNS/HTTP OK, startup {startup:.1f}s", flush=True)
         finally:
-            run("down", "-v", "--remove-orphans")
+            run("down", "-v", "--remove-orphans", "--rmi", "local")
 
 
 def check_bonus(check):

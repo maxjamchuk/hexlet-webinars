@@ -39,14 +39,17 @@ Secret/resource stages используют только стандартную 
 
 | Блок | Время | Stages и наблюдение |
 |---|---:|---|
-| [01-build](01-build/) | 25 мин | naive → cache-friendly → multi-stage → BuildKit cache; слои, runtime и package cache |
+| Введение | 7 мин | Цели воркшопа и исходные знания Docker |
+| [01-build](01-build/) | 18 мин | naive → cache-friendly → multi-stage → BuildKit cache; слои, runtime и package cache |
 | [02-secrets](02-secrets/) | 10 мин | bad ENV → build secret; где остаётся токен |
-| [03-lifecycle](03-lifecycle/) | 20 мин | shell form → exec graceful → healthcheck; PID 1, stop, running ≠ healthy |
-| [04-security](04-security/) | 15 мин | root → broken non-root → fixed non-root; UID и владельцы файлов |
-| [05-networking](05-networking/) | 20 мин | broken localhost → service DNS; ps, logs, exec и inspect |
+| [03-lifecycle](03-lifecycle/) | 17 мин | shell form → exec graceful → healthcheck; PID 1, stop, running ≠ healthy |
+| [04-security](04-security/) | 12 мин | root → broken non-root → fixed non-root; UID и владельцы файлов |
+| [05-networking](05-networking/) | 18 мин | broken localhost → service DNS; ps, logs, exec и inspect |
+| Итог | 8 мин | Основные выводы и вопросы |
 
-Резервные **+30 минут**: [06-resources](06-resources/) — 15 минут на память/OOM,
-[07-reproducibility](07-reproducibility/) — 15 минут на tag/digest/lock.
+Резервные **+30 минут**: [06-resources](06-resources/) — 12 минут на память/OOM,
+[07-reproducibility](07-reproducibility/) — 10 минут на tag/digest/lock,
+ещё 8 минут — концептуальное обсуждение orchestration/Kubernetes без практики.
 Основной маршрут рассчитан на заранее загруженные images и зависимости.
 
 ## Быстрый запуск
@@ -120,7 +123,8 @@ python tools/smoke_check.py --include-bonus
 
 Скрипт проверяет Docker/daemon/Compose, ограничивает ожидания, назначает уникальные
 имена `hexlet-ac-smoke-*` и динамические порты. В `finally` удаляет свои контейнеры,
-а Compose останавливает через `down -v --remove-orphans`. Пользовательские
+а Compose останавливает и удаляет локальные images текущего уникального проекта
+через `down -v --remove-orphans --rmi local`. Пользовательские
 контейнеры не затрагиваются; очистки общего build cache нет.
 Подробные команды, stdout/stderr и времена сохраняются в игнорируемом `.smoke-logs/`.
 
@@ -190,5 +194,6 @@ docker compose down -v --remove-orphans
 
 ## За рамками
 
-Kubernetes, Swarm, registry deployment, CI/CD, TLS, базы данных, ORM, миграции,
+Практический Kubernetes (YAML, `kubectl`, manifests и т. п.), Swarm,
+registry deployment, CI/CD, TLS, базы данных, ORM, миграции,
 брокеры сообщений и production architecture. Презентация и конспект сюда не входят.
