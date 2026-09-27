@@ -1,0 +1,22 @@
+services:
+  api:
+    build: .
+    command: ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${API_PORT:-9000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=0.8)"]
+      interval: 2s
+      timeout: 1s
+      retries: 2
+      start_period: 2s
+  client:
+    build: .
+    command: ["uvicorn", "app.client:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      API_URL: http://api:8000/message
+    ports:
+      - "127.0.0.1:${CLIENT_PORT:-8080}:8000"
+    depends_on:
+      api:
+        condition: service_healthy

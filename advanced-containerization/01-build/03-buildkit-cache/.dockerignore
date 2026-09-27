@@ -1,0 +1,8 @@
+.venv
+.git
+__pycache__
+*.pyc
+.demo-secret
+demo-secret.example
+demo_versions
+README.md
