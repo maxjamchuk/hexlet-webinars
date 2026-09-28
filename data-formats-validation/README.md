@@ -26,7 +26,7 @@
 
 ## Презентация
 
-Ссылка на презентацию будет добавлена после её подготовки.
+[Открыть презентацию в Google Slides](https://docs.google.com/presentation/d/1b7rwldtl1UAmxx8FjoCePwcln0XnFQBBDpCY2TFLIiI/edit?usp=sharing)
 
 ## Требования
 
