@@ -10,6 +10,10 @@
 health status, пользователя процесса, права записи и адресацию между контейнерами.
 FastAPI — минимальная нагрузка для Docker, а не предмет занятия.
 
+## Презентация
+
+[Открыть презентацию в Google Slides](https://docs.google.com/presentation/d/1mP537X00TmYawKprcY-J2EN8RIrt7-z0q1vF29-z0h0/edit?usp=sharing)
+
 ## Окружение
 
 - Git, Docker с Linux containers и BuildKit, Docker Compose v2.
