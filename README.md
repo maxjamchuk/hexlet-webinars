@@ -22,6 +22,7 @@
 
 | Папка | Тема | Краткое описание |
 |-------|------|------------------|
+| [`django-orm-workshop`](./django-orm-workshop) | Python: Django ORM | Comic Catalog для live coding: QuerySet, CRUD, связи, агрегации, транзакции и N+1; shell_plus, Admin, фиксированные данные и шпаргалка преподавателя. |
 | [`advanced-containerization`](./advanced-containerization) | Продвинутая контейнеризация | Практический воркшоп по Docker: кеширование сборки, multi-stage builds, BuildKit, секреты, lifecycle контейнера, healthcheck, non-root, права файловой системы, Compose networking и диагностика; дополнительные блоки про ресурсы и воспроизводимость сборки. |
 | [`data-formats-validation`](./data-formats-validation) | Основы работы с данными | Общий воркшоп по JSON, YAML, CSV и XML: parsing, структурная валидация через JSON Schema, бизнес-правила и базовые проблемы качества данных — пропуски, дубли, некорректные значения и нормализация. |
 | [`1_python_functools`](./1_python_functools) | Python: `functools` | Введение в инструменты стандартной библиотеки для работы с функциями: декораторы, кэширование, частичное применение аргументов и другие приёмы функционального стиля в Python. |
