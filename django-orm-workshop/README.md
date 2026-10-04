@@ -1,8 +1,12 @@
 # Python: Django ORM — Comic Catalog
 
 Учебный проект для live coding на 90–120 минут. Основной интерфейс — IPython
-через `shell_plus`; Django Admin показывает состояние БД. Маршрут преподавателя:
+через `shell_plus`; Django Admin показывает состояние БД. Маршрут демонстрации:
 [DEMO.md](DEMO.md).
+
+## Презентация
+
+[Открыть презентацию в Google Slides](https://docs.google.com/presentation/d/17v8WpfD4fsyVK2KJNiZJkZuSs_GDxrlcO97Xa_WvyY4)
 
 ## Быстрый запуск
 
