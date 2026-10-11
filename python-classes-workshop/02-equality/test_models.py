@@ -1,0 +1,90 @@
+import unittest
+
+from fixtures import create_playlist, create_tracks
+from models import Playlist, Track
+
+
+class ModelsTest(unittest.TestCase):
+    def test_track_attributes(self):
+        track = Track("The Cure", "A Forest", 1980)
+        self.assertEqual((track.artist, track.title, track.year),
+                         ("The Cure", "A Forest", 1980))
+
+    def test_playlist_name_and_order(self):
+        playlist = create_playlist()
+        self.assertEqual(playlist.name, "Post-Punk 80s")
+        self.assertEqual(
+            [(track.artist, track.title, track.year) for track in playlist._tracks],
+            [("Joy Division", "Love Will Tear Us Apart", 1980),
+             ("The Cure", "A Forest", 1980),
+             ("Siouxsie and the Banshees", "Spellbound", 1981),
+             ("The Sound", "Winning", 1981),
+             ("The Chameleons", "Second Skin", 1983),
+             ("Bauhaus", "She's in Parties", 1983)],
+        )
+
+    def test_playlist_copies_input(self):
+        source = create_tracks()
+        playlist = Playlist("Copy", source)
+        source.clear()
+        self.assertEqual(len(playlist._tracks), 6)
+        self.assertIsNot(playlist._tracks, source)
+
+    def test_fixtures_create_fresh_objects(self):
+        self.assertIsNot(create_tracks()[0], create_tracks()[0])
+        self.assertIsNot(create_playlist(), create_playlist())
+
+    def test_track_str_and_repr(self):
+        track = Track("The Cure", "A Forest", 1980)
+        self.assertEqual(str(track), "The Cure — A Forest (1980)")
+        self.assertEqual(repr(track),
+                         "Track(artist='The Cure', title='A Forest', year=1980)")
+        self.assertEqual(str([track]), f"[{repr(track)}]")
+
+    def test_playlist_str_and_repr(self):
+        playlist = create_playlist()
+        self.assertEqual(str(playlist), "Post-Punk 80s — треков: 6")
+        shown = repr(playlist)
+        self.assertIn("Playlist(name='Post-Punk 80s'", shown)
+        self.assertIn("Track(artist='The Cure', title='A Forest', year=1980)", shown)
+
+    def test_empty_and_escaped_repr(self):
+        self.assertEqual(str(Playlist("Empty", [])), "Empty — треков: 0")
+        self.assertIn("tracks=[]", repr(Playlist("Empty", [])))
+        track = Track("O'Neil", "Line\nBreak", 1980)
+        self.assertIn(repr("O'Neil"), repr(track))
+        self.assertIn(repr("Line\nBreak"), repr(track))
+        self.assertIn(repr("Mix\nName"), repr(Playlist("Mix\nName", [track])))
+
+    def test_equal_value_different_identity(self):
+        first = Track("The Cure", "A Forest", 1980)
+        second = Track("The Cure", "A Forest", 1980)
+        self.assertIsNot(first, second)
+        self.assertEqual(first, second)
+        self.assertEqual(first, first)
+
+    def test_each_field_changes_equality(self):
+        original = Track("The Cure", "A Forest", 1980)
+        for changed in (Track("Bauhaus", "A Forest", 1980),
+                        Track("The Cure", "Other", 1980),
+                        Track("The Cure", "A Forest", 1981)):
+            with self.subTest(changed=repr(changed)):
+                self.assertNotEqual(original, changed)
+
+    def test_incompatible_type_and_hash(self):
+        track = create_tracks()[0]
+        self.assertFalse(track == "Love Will Tear Us Apart")
+        self.assertIs(track.__eq__("Love Will Tear Us Apart"), NotImplemented)
+        with self.assertRaises(TypeError):
+            hash(track)
+
+    def test_compatible_subclass(self):
+        class SpecialTrack(Track):
+            pass
+
+        self.assertEqual(Track("The Cure", "A Forest", 1980),
+                         SpecialTrack("The Cure", "A Forest", 1980))
+
+
+if __name__ == '__main__':
+    unittest.main()

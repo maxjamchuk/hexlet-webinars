@@ -1,0 +1,9 @@
+[project]
+name = "python-classes-workshop"
+version = "0.1.0"
+description = "Учебный репозиторий для вебинара Python: Классы"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
