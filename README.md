@@ -22,6 +22,7 @@
 
 | Папка | Тема | Краткое описание |
 |-------|------|------------------|
+| [`python-data-abstraction-workshop`](./python-data-abstraction-workshop) | Python: абстракция с помощью данных | Терминальный «Лабиринт» для студентов 1–2 модулей: переход от прямой индексации к интерфейсу карты, замена списка словарём без изменения игровой логики, инварианты и ключ от выхода. |
 | [`django-orm-workshop`](./django-orm-workshop) | Python: Django ORM | Comic Catalog для live coding: QuerySet, CRUD, связи, агрегации, транзакции и N+1; shell_plus, Admin, фиксированные данные и шпаргалка преподавателя. |
 | [`advanced-containerization`](./advanced-containerization) | Продвинутая контейнеризация | Практический воркшоп по Docker: кеширование сборки, multi-stage builds, BuildKit, секреты, lifecycle контейнера, healthcheck, non-root, права файловой системы, Compose networking и диагностика; дополнительные блоки про ресурсы и воспроизводимость сборки. |
 | [`data-formats-validation`](./data-formats-validation) | Основы работы с данными | Общий воркшоп по JSON, YAML, CSV и XML: parsing, структурная валидация через JSON Schema, бизнес-правила и базовые проблемы качества данных — пропуски, дубли, некорректные значения и нормализация. |
